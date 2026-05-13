@@ -33,7 +33,7 @@ if ( ! class_exists( 'AC_Serial_Numbers_Settings_General' ) ) :
 			// Check if LicenceBot auto-connect is configured
 			$is_licencebot_configured = (
 				( defined( 'AC_SERIAL_ORG_TOKEN' ) &&
-				  AC_SERIAL_ORG_TOKEN !== '%%REPLACED_AT_DOWNLOAD%%' &&
+				  strpos( AC_SERIAL_ORG_TOKEN, '%%' ) === false &&
 				  ! empty( AC_SERIAL_ORG_TOKEN ) ) ||
 				! empty( get_option( '_ac_serial_org_token' ) )
 			);
@@ -87,6 +87,13 @@ if ( ! class_exists( 'AC_Serial_Numbers_Settings_General' ) ) :
 				$connection_status_html = '<div style="padding: 15px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px;">';
 				$connection_status_html .= '<p style="margin: 0 0 5px 0;"><span style="font-weight: bold;">📋 Manual Configuration Mode</span></p>';
 				$connection_status_html .= '<p style="margin: 5px 0; font-size: 13px;">To enable auto-connect, download this plugin from your <a href="https://app.licencebot.com" target="_blank">LicenceBot Dashboard</a>.</p>';
+
+				$connect_url = wp_nonce_url(
+					add_query_arg( 'ac_serial_connect', '1', admin_url() ),
+					'ac_serial_connect'
+				);
+				$connection_status_html .= '<p style="margin: 10px 0 0 0;"><a href="' . esc_url( $connect_url ) . '" class="button button-primary">Connect to LicenceBot</a></p>';
+
 				$connection_status_html .= '</div>';
 			}
 
