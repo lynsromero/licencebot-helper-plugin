@@ -1,0 +1,161 @@
+.wp-list-table.serials .column-key{width:35%}.wp-list-table.serials .serial-key{display:inline-block;font-family:Consolas,monospace;font-weight:400;min-width:170px;min-height:20px;position:relative;line-height:20px;padding:3px 10px 2px;margin-left:25px;border-radius:3px;cursor:pointer}.wp-list-table.serials .serial-key::before{font-family:dashicons;content:"\f112";position:absolute;top:0;bottom:0;left:-25px;width:25px;background-color:silver;color:#fff;line-height:25px;border-top-left-radius:3px;border-bottom-left-radius:3px;text-align:center}.wp-list-table.serials .serial-key.encrypted::after{position:absolute;top:0;right:0;bottom:0;left:0;content:'SERIAL-XXXX-XXXX-XXXX';color:rgba(0,0,0,.4);line-height:25px;padding-left:10px}.wp-list-table.serials .serial-key-status{color:#fff;padding:3px 10px;font-size:14px;white-space:nowrap;background-color:silver;border-radius:3px;line-height:1;border:1px solid transparent}.wp-list-table.serials .serial-key-status.available{color:#155724;background-color:#d4edda;border-color:#c3e6cb}.wp-list-table.serials .serial-key-status.inactive{color:#1b1e21;background-color:#d6d8d9;border-color:#c6c8ca}.wp-list-table.serials .serial-key-status.sold{background:#cce5ff;color:#004085;border-color:#b8daff}.wp-list-table.serials .serial-key-status.expired{color:#721c24;background-color:#f8d7da;border-color:#f5c6cb}.wp-list-table.serials .serial-key-status.cancelled{color:#856404;background-color:#fff3cd;border-color:#ffeeba}.wp-list-table.serials .serial-key-status.refunded{color:#383d41;background-color:#e2e3e5;border-color:#d6d8db}.wp-list-table.serials .serial-key-status.failed{color:#5e171e;background-color:#f4c1c6;border-color:#f1b0b7}.wcsn-serial-key{display:inline-block;font-family:Consolas,monospace;font-weight:400;min-width:170px;min-height:20px;text-align:left;position:relative;line-height:20px;padding:3px 10px 2px;margin-left:25px;border-radius:3px;cursor:pointer;max-width:80%}.wcsn-serial-key::before{font-family:dashicons;content:"\f112";position:absolute;top:0;bottom:0;left:-25px;width:25px;background-color:silver;color:#fff;text-align:center;line-height:25px;border-top-left-radius:3px;border-bottom-left-radius:3px}.wcsn-serial-key.encrypted::after{position:absolute;top:0;right:0;bottom:0;left:10px;content:'SERIAL-XXXX-XXXX-XXXX';color:rgba(0,0,0,.4);line-height:25px}._serial_key_source_field label{margin:0;width:100%}
+
+.select2-container--default .select2-selection--single{border:1px solid #7e8993;box-shadow:inset 0 1px 2px rgba(0,0,0,.07)}.select2-container--default .select2-selection--single{height:30px;border-radius:3px}.select2-dropdown{border:1px solid #ddd}.select2-container--default .select2-selection--single .select2-selection__rendered{line-height:28px}.select2-container--default .select2-search--dropdown .select2-search__field{border-color:#5b9dd9}.select2-container--default .select2-selection--single .select2-selection__arrow{height:30px} 
+.select2-container .select2-selection--multiple .select2-selection__choice {
+    white-space: normal;
+}
+table#ac_serial_numbers_stock_manager td.loading {
+    background: transparent;
+    animation-name: loading;
+    animation-duration: 0.2s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}
+table#ac_serial_numbers_stock_manager td.success {
+    animation-name: success;
+    animation-duration: 4s;
+    animation-iteration-count: 1;
+    animation-timing-function: ease-in-out;
+}
+.ac-serial-numbers-settings input[name=flush] {
+    cursor: pointer;
+}
+/* we need to create loading animation by changing background color from green to red */
+@keyframes loading {
+    0% {
+        background-color: rgb(255, 212, 212);
+    }
+    50% {
+        background-color: rgb(254, 172, 172);
+    }
+    100% {
+        background-color: rgb(255, 212, 212);
+    }
+}
+@keyframes success {
+    0% {
+        background-color: rgb(127, 215, 130);
+    }
+    100% {
+        background-color: rgba(255, 212, 212, 0);
+    }
+}
+#order-lines-serial-numbers .woocommerce_order_items_wrapper {
+    margin: 0;
+    overflow-x: auto;
+}
+#order-lines-serial-numbers .woocommerce_order_items_wrapper table.woocommerce_order_items {
+    width: 100%;
+    background: #fff;
+}
+#order-lines-serial-numbers .woocommerce_order_items_wrapper table.woocommerce_order_items thead th {
+    text-align: left;
+    padding: 1em;
+    font-weight: 400;
+    color: #999;
+    background: #f8f8f8;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+#order-lines-serial-numbers .woocommerce_order_items_wrapper table.woocommerce_order_items thead th.sortable {
+    cursor: pointer;
+}
+#order-lines-serial-numbers .woocommerce_order_items_wrapper table.woocommerce_order_items thead th:first-child {
+    padding-left: 2em;
+}
+#woocommerce-order-items .woocommerce_order_items_wrapper table.woocommerce_order_items thead th:last-child {
+    padding-right: 2em;
+}
+#order-lines-serial-numbers .woocommerce_order_items_wrapper table.woocommerce_order_items .item {
+    min-width: 200px;
+}
+
+#order-lines-serial-numbers .woocommerce_order_items_wrapper table.woocommerce_order_items td.thumb .wc-order-item-thumbnail {
+    width: 38px;
+    height: 38px;
+    border: 2px solid #e8e8e8;
+    background: #f8f8f8;
+    color: #ccc;
+    position: relative;
+    font-size: 21px;
+    display: block;
+    text-align: center;
+}
+#order-lines-serial-numbers .woocommerce_order_items_wrapper table.woocommerce_order_items td.thumb .wc-order-item-thumbnail img {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+#order-lines-serial-numbers .woocommerce_order_items_wrapper table.woocommerce_order_items thead th {
+    text-align: left;
+    padding: 1em;
+    font-weight: 400;
+    color: #999;
+    background: #f8f8f8;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+#order-lines-serial-numbers .woocommerce_order_items_wrapper table.woocommerce_order_items tbody th,
+#order-lines-serial-numbers .woocommerce_order_items_wrapper table.woocommerce_order_items td {
+    padding: 1.5em 1em 1em;
+    text-align: left;
+    line-height: 1.5em;
+    vertical-align: top;
+    border-bottom: 1px solid #f8f8f8;
+}
+#order-lines-serial-numbers .woocommerce_order_items_wrapper table.woocommerce_order_items tbody tr:last-child td {
+    border-bottom: 1px solid #dfdfdf;
+}
+#order-lines-serial-numbers .woocommerce_order_items_wrapper table.woocommerce_order_items tbody tr:first-child td {
+    border-top: 8px solid #f8f8f8;
+}
+#order-lines-serial-numbers .woocommerce_order_items_wrapper table.woocommerce_order_items tbody#order_line_items tr:first-child td {
+    border-top: none;
+}
+
+#order-lines-serial-numbers .wc-order-data-row {
+    border-bottom: 1px solid #dfdfdf;
+    padding: 1.5em 2em;
+    background: #f8f8f8;
+    line-height: 2em;
+    text-align: right;
+}
+#order-lines-serial-numbers .wc-order-data-row::after,
+#order-lines-serial-numbers .wc-order-data-row::before {
+    content: " ";
+    display: table;
+}
+
+#order-lines-serial-numbers .wc-order-totals {
+    float: right;
+    width: 50%;
+    margin: 0;
+    padding: 0;
+    text-align: right;
+}
+#order-lines-serial-numbers .wc-order-totals .label {
+    vertical-align: top;
+}
+#order-lines-serial-numbers .wc-order-totals .total {
+    font-size: 1em!important;
+    width: 10em;
+    margin: 0 0 0 .5em;
+    box-sizing: border-box;
+}
+#order-lines-serial-numbers .amount {
+    white-space: nowrap;
+}
+#order-lines-serial-numbers .wc-order-totals .amount {
+    font-weight: 700;
+}
+
+#order-lines-serial-numbers .wc-order-data-row p {
+    margin: 0;
+    line-height: 2em;
+}
+#order-lines-serial-numbers .add-items .description {
+    margin-right: 10px;
+}
