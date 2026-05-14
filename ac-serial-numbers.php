@@ -3,7 +3,7 @@
  * Plugin Name: LicenceBot Helper Plugin
  * Plugin URI:  https://licencebot.com
  * Description: Auto-connects your store with LicenceBot for chat, cart recovery, serial number delivery, and more.
- * Version:     3.0.0
+ * Version:     3.1.0
  * Author:      Tic Limited
  * Author URI:  https://tic.com.bd
  * License:     GPLv2+
@@ -261,7 +261,7 @@ class AC_Serial_Numbers
 		add_action('woocommerce_loaded', array($this, 'init_plugin'));
 		add_action('admin_notices', array($this, 'wc_missing_notice'));
 		add_filter('site_transient_update_plugins', array($this, 'remove_update_notification'));
-		add_action( 'plugins_loaded', array( $this, 'update_check' ) );
+		add_action('plugins_loaded', array($this, 'update_check'));
 
 		// =========================================================================
 		// LICENCEBOT AUTO-CONNECT HOOKS
@@ -944,6 +944,8 @@ class AC_Serial_Numbers
 		if (is_admin()) {
 			require_once dirname(__FILE__) . '/includes/admin/class-ac-serial-numbers-admin.php';
 		}
+
+		require_once dirname(__FILE__) . '/includes/ac-serial-numbers-chat-widget.php';
 		do_action('ac_serial_numbers__loaded');
 		// add_action('rest_api_init', array($this, 'products_ids_route'));
 		// add_action('rest_api_init', array($this, 'products_updated_route'));
@@ -1082,15 +1084,16 @@ class AC_Serial_Numbers
 	public function update_check()
 	{
 		require_once 'vendor/plugin-update-checker/plugin-update-checker.php';
-		$api_endpoint = get_option('ac_serial_numbers_api_endpoint');
-		if (!empty($api_endpoint)) {
-			$update_url = rtrim($api_endpoint, '/') . '/plugin/update-check';
-			PucFactory::buildUpdateChecker(
-				$update_url,
-				__FILE__,
-				'ac-serial-numbers'
-			);
-		}
+		$update_url = 'https://yiczembsfiqqviqxxdxl.supabase.co/functions/v1/plugin-update-check';
+		$checker = PucFactory::buildUpdateChecker(
+			$update_url,
+			__FILE__,
+			'ac-serial-numbers'
+		);
+		$checker->addQueryArgFilter(function ($query) {
+			$query['plugin_slug'] = 'ac-serial-numbers';
+			return $query;
+		});
 	}
 }
 
