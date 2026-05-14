@@ -24,8 +24,29 @@ class AC_Serial_Numbers_Admin_MetaBoxes {
 	 * @since 1.2.5
 	 */
 	public static function register_metaboxes() {
-		add_meta_box( 'order-lines-serial-numbers', __( 'Order Lines', 'ac-serial-numbers' ), array( __CLASS__, 'order_lines_metabox' ), 'shop_order', 'advanced', 'high' );
-		add_meta_box( 'order-serial-numbers', __( 'Serial Numbers', 'ac-serial-numbers' ), array( __CLASS__, 'order_metabox' ), 'shop_order', 'advanced', 'high' );
+		$screens = array( 'shop_order', 'woocommerce_page_wc-orders' );
+		foreach ( $screens as $screen ) {
+			add_meta_box( 'order-lines-serial-numbers', __( 'Order Lines', 'ac-serial-numbers' ), array( __CLASS__, 'order_lines_metabox' ), $screen, 'advanced', 'high' );
+			add_meta_box( 'order-serial-numbers', __( 'Serial Numbers', 'ac-serial-numbers' ), array( __CLASS__, 'order_metabox' ), $screen, 'advanced', 'high' );
+		}
+	}
+
+	/**
+	 * Get order ID from the metabox parameter (supports WP_Post and WC_Order).
+	 *
+	 * @param WP_Post|WC_Order $post_or_order
+	 * @return int
+	 */
+	private static function get_order_id_from_param( $post_or_order ) {
+		if ( is_object( $post_or_order ) ) {
+			if ( $post_or_order instanceof WC_Order ) {
+				return $post_or_order->get_id();
+			}
+			if ( isset( $post_or_order->ID ) ) {
+				return $post_or_order->ID;
+			}
+		}
+		return 0;
 	}
 
 	/**
@@ -257,11 +278,12 @@ class AC_Serial_Numbers_Admin_MetaBoxes {
 	 *
 	 * @return bool
 	 */
-	public static function order_metabox( $post ) {
-		if ( ! is_object( $post ) || ! isset( $post->ID ) ) {
+	public static function order_metabox( $post_or_order ) {
+		$order_id = self::get_order_id_from_param( $post_or_order );
+		if ( ! $order_id ) {
 			return false;
 		}
-		$order = wc_get_order( $post->ID );
+		$order = wc_get_order( $order_id );
 
 		// bail for no order
 		if ( ! $order ) {
@@ -356,16 +378,21 @@ class AC_Serial_Numbers_Admin_MetaBoxes {
 	}
 
 
-	public static function order_lines_metabox($post) {
+	public static function order_lines_metabox($post_or_order) {
 		global $post, $thepostid, $theorder;
 
-		OrderUtil::init_theorder_object( $post );
-		if ( ! is_int( $thepostid ) && ( $post instanceof WP_Post ) ) {
-			$thepostid = $post->ID;
+		if ( $post_or_order instanceof WC_Order ) {
+			$order = $post_or_order;
+			$theorder = $order;
+			$thepostid = $order->get_id();
+		} else {
+			$post = $post_or_order;
+			OrderUtil::init_theorder_object( $post );
+			if ( ! is_int( $thepostid ) && ( $post instanceof WP_Post ) ) {
+				$thepostid = $post->ID;
+			}
+			$order = $theorder;
 		}
-
-		$order = $theorder;
-		$data  = ( $post instanceof WP_Post ) ? get_post_meta( $post->ID ) : array();
 
 		include __DIR__ . '/views/html-order-items.php';
 	}

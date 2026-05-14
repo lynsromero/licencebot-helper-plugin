@@ -12,6 +12,8 @@ class AC_Serial_Numbers_Admin {
 		add_action( 'admin_head', array( __CLASS__, 'print_style' ) );
 		add_filter( 'manage_edit-shop_order_columns', array( __CLASS__, 'add_order_serial_column' ) );
 		add_action( 'manage_shop_order_posts_custom_column', array( __CLASS__, 'add_order_serial_column_content' ), 20, 2 );
+		add_filter( 'manage_woocommerce_page_wc-orders_columns', array( __CLASS__, 'add_order_serial_column' ) );
+		add_action( 'manage_woocommerce_page_wc-orders_custom_column', array( __CLASS__, 'add_order_serial_column_content' ), 20, 2 );
 		
 		// ajax call to update product key source
 		add_action( 'wp_ajax_ac_serial_numbers_update_product_key_source', array( $this, 'update_product_key_source' ) );
@@ -250,12 +252,13 @@ class AC_Serial_Numbers_Admin {
 
 	/**
 	 * @param $column
-	 * @param $order_id
+	 * @param $order_or_id
 	 *
 	 * @since 1.2.0
 	 */
-	public static function add_order_serial_column_content( $column, $order_id ) {
+	public static function add_order_serial_column_content( $column, $order_or_id ) {
 		if ( $column == 'order_serials' ) {
+			$order_id = is_object( $order_or_id ) ? $order_or_id->get_id() : intval( $order_or_id );
 			$total_ordered = ac_serial_numbers_order_has_serial_numbers( $order_id );
 			if ( empty( $total_ordered ) ) {
 				echo '&mdash;';

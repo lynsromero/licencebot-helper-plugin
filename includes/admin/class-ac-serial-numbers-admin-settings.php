@@ -19,6 +19,7 @@ class AC_Serial_Numbers_Admin_Settings extends WC_Admin_Settings {
 
 			$settings[] = include( 'settings/ac-serial-numbers-settings-general.php' );
 			$settings[] = include( 'settings/ac-serial-numbers-settings-help.php' );
+			$settings[] = include( 'settings/ac-serials-settings-updates.php' );
 
 			self::$settings = apply_filters( 'ac_serial_numbers_get_settings_pages', $settings );
 		}

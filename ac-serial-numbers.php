@@ -3,20 +3,19 @@
  * Plugin Name: LicenceBot Helper Plugin
  * Plugin URI:  https://licencebot.com
  * Description: Auto-connects your store with LicenceBot for chat, cart recovery, serial number delivery, and more.
- * Version:     2.0.7
- * Author:      autocircle
- * Author URI:  https://profiles.wordpress.org/autocircle/
- * Donate link: https://profiles.wordpress.org/autocircle/
+ * Version:     3.0.0
+ * Author:      Tic Limited
+ * Author URI:  https://tic.com.bd
  * License:     GPLv2+
- * Text Domain: ac-serial-numbers
+ * Text Domain: licencebot-helper
  * Domain Path: /i18n/languages/
- * Tested up to: 5.8.2
+ * Tested up to: 6.8.0
  * WC requires at least: 6.0.0
  * WC tested up to: 10.7.0
  */
 
 /**
- * Copyright (c) 2019 autocircled (email : support@tic.com.bd)
+ * Copyright (c) 2016 ticlimited (email : support@tic.com.bd)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 or, at
@@ -262,7 +261,7 @@ class AC_Serial_Numbers
 		add_action('woocommerce_loaded', array($this, 'init_plugin'));
 		add_action('admin_notices', array($this, 'wc_missing_notice'));
 		add_filter('site_transient_update_plugins', array($this, 'remove_update_notification'));
-		// add_action( 'plugins_loaded', array( $this, 'update_check' ) ); // Disabled temporarily for testing
+		add_action( 'plugins_loaded', array( $this, 'update_check' ) );
 
 		// =========================================================================
 		// LICENCEBOT AUTO-CONNECT HOOKS
@@ -1083,11 +1082,15 @@ class AC_Serial_Numbers
 	public function update_check()
 	{
 		require_once 'vendor/plugin-update-checker/plugin-update-checker.php';
-		PucFactory::buildUpdateChecker(
-			'https://repo.tic.com.bd/plugin/ac-serial-numbers.json',
-			__FILE__, //Full path to the main plugin file or functions.php.
-			'ac-serial-numbers'
-		);
+		$api_endpoint = get_option('ac_serial_numbers_api_endpoint');
+		if (!empty($api_endpoint)) {
+			$update_url = rtrim($api_endpoint, '/') . '/plugin/update-check';
+			PucFactory::buildUpdateChecker(
+				$update_url,
+				__FILE__,
+				'ac-serial-numbers'
+			);
+		}
 	}
 }
 
