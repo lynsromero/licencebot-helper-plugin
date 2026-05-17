@@ -3,7 +3,7 @@
  * Plugin Name: LicenceBot Helper Plugin
  * Plugin URI:  https://licencebot.com
  * Description: Auto-connects your store with LicenceBot for chat, cart recovery, serial number delivery, and more.
- * Version:     3.1.0
+ * Version:     3.1.7
  * Author:      Tic Limited
  * Author URI:  https://tic.com.bd
  * License:     GPLv2+
@@ -12,6 +12,7 @@
  * Tested up to: 6.8.0
  * WC requires at least: 6.0.0
  * WC tested up to: 10.7.0
+ * Requires Plugins: woocommerce
  */
 
 /**
@@ -34,6 +35,15 @@
 
 // don't call the file directly
 defined('ABSPATH') || exit();
+
+/**
+ * Declare HPOS (High-Performance Order Storage) compatibility.
+ */
+add_action('before_woocommerce_init', function () {
+	if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', __FILE__, true);
+	}
+});
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
@@ -74,7 +84,7 @@ class AC_Serial_Numbers
 	 * @var string
 	 * @since 1.0.0
 	 */
-	public $version = '2.0.7';
+	public $version = '3.1.7';
 
 	/**
 	 * This plugin's instance

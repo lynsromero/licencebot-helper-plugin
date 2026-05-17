@@ -9,6 +9,8 @@ class AC_Serial_Numbers_AJAX {
 	public function __construct() {
 		add_action( 'wp_ajax_ac_serial_numbers_search_products', array( $this, 'search_products' ) );
 		add_action( 'wp_ajax_ac_serial_numbers_decrypt_key', array( $this, 'decrypt_key' ) );
+		add_action( 'wp_ajax_ac_serial_numbers_refresh_counts', array( $this, 'refresh_counts' ) );
+		add_action( 'wp_ajax_ac_serial_numbers_sync_order', array( $this, 'sync_order' ) );
 	}
 
 	/**
@@ -84,6 +86,50 @@ class AC_Serial_Numbers_AJAX {
 
 		$this->send_success( [ 'key' => ac_serial_numbers_decrypt_key( $serial_number->serial_key ) ] );
 
+	}
+
+	/**
+	 * Refresh license counts from LicenceBot API.
+	 *
+	 * @since 3.1.2
+	 */
+	public function refresh_counts() {
+		$this->verify_nonce( 'ac_serial_numbers_admin_js_nonce', 'nonce' );
+		$this->check_permission();
+
+		$data = ac_serial_numbers_get_license_counts( null, null, true );
+
+		if ( false === $data ) {
+			$this->send_error( [ 'message' => __( 'Failed to fetch license counts from LicenceBot.', 'ac-serial-numbers' ) ] );
+		}
+
+		$this->send_success( [
+			'totals'   => $data['totals'],
+			'products' => $data['products'] ?? [],
+		] );
+	}
+
+	/**
+	 * Sync serial numbers for a specific order from LicenceBot.
+	 *
+	 * @since 3.1.2
+	 */
+	public function sync_order() {
+		$this->verify_nonce( 'ac_serial_numbers_admin_js_nonce', 'nonce' );
+		$this->check_permission();
+
+		$order_id = isset( $_REQUEST['order_id'] ) ? absint( $_REQUEST['order_id'] ) : 0;
+
+		if ( empty( $order_id ) ) {
+			$this->send_error( [ 'message' => __( 'Invalid order ID.', 'ac-serial-numbers' ) ] );
+		}
+
+		$synced = ac_serial_numbers_sync_order_serials( $order_id );
+
+		$this->send_success( [
+			'message'      => sprintf( __( 'Synced %d serial number(s).', 'ac-serial-numbers' ), $synced ),
+			'synced_count' => $synced,
+		] );
 	}
 
 	/**

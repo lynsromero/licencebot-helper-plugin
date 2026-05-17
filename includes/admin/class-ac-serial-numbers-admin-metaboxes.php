@@ -290,8 +290,14 @@ class AC_Serial_Numbers_Admin_MetaBoxes {
 			return false;
 		}
 
+		$api_configured = ! empty( get_option( 'ac_serial_numbers_api_endpoint' ) ) && ! empty( get_option( 'ac_serial_numbers_api_key' ) );
+
 		if ( 'completed' !== $order->get_status( 'edit' ) ) {
 			echo sprintf( '<p>%s</p>', __( 'Order status is not completed.', 'ac-serial-numbers' ) );
+
+			if ( $api_configured ) {
+				echo '<p><button type="button" class="button acsn-sync-order" data-order-id="' . esc_attr( $order_id ) . '">' . __( 'Sync Licenses from LicenceBot', 'ac-serial-numbers' ) . '</button></p>';
+			}
 
 			return false;
 		}
@@ -307,6 +313,10 @@ class AC_Serial_Numbers_Admin_MetaBoxes {
 
 		if ( empty( $serial_numbers ) ) {
 			echo sprintf( '<p>%s</p>', apply_filters( 'ac_serial_numbers_pending_notice', __( 'Order waiting for assigning serial numbers.', 'ac-serial-numbers' ) ) );
+
+			if ( $api_configured ) {
+				echo '<p><button type="button" class="button acsn-sync-order" data-order-id="' . esc_attr( $order_id ) . '">' . __( 'Sync Licenses from LicenceBot', 'ac-serial-numbers' ) . '</button></p>';
+			}
 
 			return false;
 		}

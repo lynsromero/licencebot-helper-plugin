@@ -21,6 +21,7 @@
 			plugin.clear_cache(".ac-serial-numbers-settings input[name=flush]");
 			plugin.encrypt_decrypt();
 			plugin.request_keys('#request-keys-items');
+			plugin.sync_order();
 		};
 
 		plugin.init_select2_mapping = function (el, data, placeholder) {
@@ -470,6 +471,43 @@
 					},
 					error: function(xhr, status, error) {
 						console.log(error);
+					}
+				});
+			});
+		}
+
+		plugin.sync_order = function(){
+			$(document).on('click', '.acsn-sync-order', function(){
+				var $btn = $(this);
+				var order_id = $btn.data('order-id');
+				var originalText = $btn.text();
+
+				if (!confirm('Sync license keys from LicenceBot for this order?')) {
+					return;
+				}
+
+				$btn.prop('disabled', true).text('Syncing...');
+
+				$.ajax({
+					url: ac_serial_numbers_admin_i10n.ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'ac_serial_numbers_sync_order',
+						order_id: order_id,
+						nonce: ac_serial_numbers_admin_i10n.nonce
+					},
+					success: function(response) {
+						if (response.success) {
+							alert(response.data.message);
+							location.reload();
+						} else {
+							alert(response.data && response.data.message ? response.data.message : 'Sync failed.');
+							$btn.prop('disabled', false).text(originalText);
+						}
+					},
+					error: function() {
+						alert('Request failed. Please try again.');
+						$btn.prop('disabled', false).text(originalText);
 					}
 				});
 			});

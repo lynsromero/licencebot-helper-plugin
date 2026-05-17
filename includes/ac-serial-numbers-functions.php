@@ -811,6 +811,234 @@ function ac_serial_numbers_find_stock_quantity( $value, $product ) {
 	return $value;
 }
 
+/**
+ * Fetch license status counts from LicenceBot API.
+ *
+ * @param string|null $product_id Optional product UUID filter.
+ * @param string|null $store_id Optional store UUID filter.
+ * @param bool $force_refresh Force bypass cache.
+ *
+ * @return array|false Response data or false on failure.
+ * @since 3.1.2
+ */
+function ac_serial_numbers_get_license_counts( $product_id = null, $store_id = null, $force_refresh = false ) {
+	$url     = get_option( 'ac_serial_numbers_api_endpoint' );
+	$api_key = get_option( 'ac_serial_numbers_api_key' );
+
+	if ( empty( $url ) || empty( $api_key ) ) {
+		return false;
+	}
+
+	$cache_key = 'acsn_license_counts_' . md5( $product_id . '_' . $store_id );
+
+	if ( ! $force_refresh ) {
+		$cached = get_transient( $cache_key );
+		if ( false !== $cached ) {
+			return $cached;
+		}
+	}
+
+	$endpoint = rtrim( $url, '/' ) . '/product/stocks-status';
+	$params   = [];
+	if ( $product_id ) {
+		$params['product_id'] = $product_id;
+	}
+	if ( $store_id ) {
+		$params['store_id'] = $store_id;
+	}
+	if ( ! empty( $params ) ) {
+		$endpoint .= '?' . http_build_query( $params );
+	}
+
+	$response = wp_remote_get( $endpoint, [
+		'headers' => [
+			'api-key'      => $api_key,
+			'Accept'       => 'application/json',
+			'Content-Type' => 'application/json',
+		],
+		'timeout' => 20,
+	] );
+
+	if ( is_wp_error( $response ) ) {
+		return false;
+	}
+
+	$response_code = wp_remote_retrieve_response_code( $response );
+	if ( $response_code < 200 || $response_code >= 300 ) {
+		return false;
+	}
+
+	$body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+	if ( ! isset( $body['success'] ) || ! $body['success'] ) {
+		return false;
+	}
+
+	set_transient( $cache_key, $body, 5 * MINUTE_IN_SECONDS );
+
+	return $body;
+}
+
+/**
+ * Clear all license counts transients.
+ *
+ * @since 3.1.2
+ */
+function ac_serial_numbers_clear_license_counts_cache() {
+	global $wpdb;
+	$wpdb->query( $wpdb->prepare(
+		"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+		'_transient_acsn_license_counts_%'
+	) );
+}
+
+/**
+ * Sync remote licenses from LicenceBot into local DB.
+ * Fetches all serial numbers for a given order and inserts missing ones.
+ *
+ * @param int $order_id WooCommerce order ID.
+ *
+ * @return int Number of serials synced.
+ * @since 3.1.2
+ */
+function ac_serial_numbers_sync_order_serials( $order_id ) {
+	global $wpdb;
+	$order = wc_get_order( $order_id );
+	if ( ! $order ) {
+		return 0;
+	}
+
+	$system_activation_guide = get_option( 'ac_serial_numbers_system_activation_guide' ) ?? false;
+	$system_support_email    = get_option( 'ac_serial_numbers_support_email' ) ?? false;
+
+	$items       = $order->get_items();
+	$total_added = 0;
+
+	foreach ( $items as $item ) {
+		$product_id = $item->get_variation_id() ? $item->get_variation_id() : $item->get_product_id();
+
+		if ( ! ac_serial_numbers_product_serial_enabled( $product_id ) ) {
+			continue;
+		}
+
+		$source = ac_serial_numbers_product_serial_source_type( $product_id ) ? 'reseller' : 'custom_source';
+		if ( 'reseller' !== $source ) {
+			continue;
+		}
+
+		$quantity                  = $item->get_quantity();
+		$per_item_quantity         = absint( apply_filters( 'ac_serial_numbers_per_product_delivery_qty', 1, $product_id ) );
+		$per_product_total_qty     = $quantity * $per_item_quantity;
+		$already_connected         = AC_Serial_Numbers_Query::init()
+			->table( 'serial_numbers' )
+			->where( 'order_id', $order_id )
+			->where( 'product_id', $product_id )
+			->count();
+
+		if ( $already_connected >= $per_product_total_qty ) {
+			continue;
+		}
+
+		$remote_product_id = get_post_meta( $product_id, '_ac_remote_product_id', true );
+		if ( empty( $remote_product_id ) ) {
+			continue;
+		}
+
+		$url     = get_option( 'ac_serial_numbers_api_endpoint' );
+		$api_key = get_option( 'ac_serial_numbers_api_key' );
+
+		if ( empty( $url ) || empty( $api_key ) ) {
+			continue;
+		}
+
+		$api_response = wp_remote_post( rtrim( $url, '/' ) . '/shop/new-order', [
+			'headers' => [
+				'api-key'      => $api_key,
+				'Accept'       => 'application/json',
+				'Content-Type' => 'application/json',
+			],
+			'body'    => wp_json_encode( [
+				'invoice_no' => $order_id,
+				'customer'   => [
+					'first_name' => $order->get_billing_first_name(),
+					'last_name'  => $order->get_billing_last_name(),
+					'email'      => $order->get_billing_email(),
+					'phone'      => $order->get_billing_phone(),
+					'address'    => $order->get_billing_address_1() . ', ' . $order->get_billing_address_2(),
+					'city'       => $order->get_billing_city(),
+					'state'      => $order->get_billing_state(),
+					'zip'        => $order->get_billing_postcode(),
+					'country'    => $order->get_billing_country(),
+				],
+				'product'  => [
+					'op_id'    => $remote_product_id,
+					'cp_id'    => $product_id,
+					'title'    => $item->get_name(),
+					'quantity' => $quantity,
+				],
+			] ),
+			'timeout' => 30,
+		] );
+
+		if ( is_wp_error( $api_response ) ) {
+			continue;
+		}
+
+		$data = json_decode( wp_remote_retrieve_body( $api_response ), true );
+		$keys = isset( $data['data']['serialKeys'] ) && is_array( $data['data']['serialKeys'] )
+			? $data['data']['serialKeys']
+			: [];
+
+		if ( empty( $keys ) ) {
+			continue;
+		}
+
+		foreach ( $keys as $key ) {
+			$help_text = ! empty( $system_activation_guide )
+				? $system_activation_guide . ' | Support Email: ' . $system_support_email
+				: ( isset( $key['activationGuide'] ) ? $key['activationGuide'] : '' ) . ' | Support Email: ' . $system_support_email;
+
+			$existing = $wpdb->get_var( $wpdb->prepare(
+				"SELECT id FROM {$wpdb->prefix}serial_numbers WHERE product_id=%d AND serial_key=%s AND order_id=%d",
+				$product_id,
+				ac_serial_numbers_encrypt_key( $key['serialNumber'] . ' | ' . $help_text ),
+				$order_id
+			) );
+
+			if ( $existing ) {
+				continue;
+			}
+
+			$inserted = $wpdb->insert(
+				$wpdb->prefix . 'serial_numbers',
+				[
+					'serial_key'       => ac_serial_numbers_encrypt_key( $key['serialNumber'] . ' | ' . $help_text ),
+					'product_id'       => $product_id,
+					'activation_limit' => $key['activation_limit'] ?? 1,
+					'activation_count' => 0,
+					'order_id'         => $order_id,
+					'vendor_id'        => $key['supplierId'] ?? '',
+					'status'           => 'sold',
+					'validity'         => null,
+					'order_date'       => current_time( 'mysql' ),
+					'source'           => 'reseller',
+					'created_date'     => current_time( 'mysql' ),
+				]
+			);
+
+			if ( $inserted ) {
+				$total_added++;
+			}
+		}
+	}
+
+	if ( $total_added > 0 ) {
+		ac_serial_numbers_clear_license_counts_cache();
+	}
+
+	return $total_added;
+}
+
 add_filter( 'woocommerce_product_get_stock_quantity', 'ac_serial_numbers_find_stock_quantity', 10, 2 );
 
 /**

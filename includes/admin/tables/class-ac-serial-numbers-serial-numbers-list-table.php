@@ -476,6 +476,20 @@ class AC_Serial_Numbers_Serial_Numbers_List_Table extends \WP_List_Table {
 		$this->expired_count   = $pre_query->copy()->where( 'status', 'expired' )->count();
 		$this->inactive_count  = $pre_query->copy()->where( 'status', 'inactive' )->count();
 
+		if ( $this->total_count == 0 ) {
+			$api_counts = ac_serial_numbers_get_license_counts();
+			if ( $api_counts && isset( $api_counts['totals'] ) ) {
+				$this->available_count = (int) $api_counts['totals']['available'];
+				$this->sold_count      = (int) $api_counts['totals']['sold'];
+				$this->refunded_count  = (int) $api_counts['totals']['refunded'];
+				$this->cancelled_count = (int) $api_counts['totals']['cancelled'];
+				$this->expired_count   = (int) $api_counts['totals']['expired'];
+				$this->failed_count    = (int) $api_counts['totals']['failed'];
+				$this->inactive_count  = (int) $api_counts['totals']['inactive'];
+				$this->total_count     = $this->available_count + $this->sold_count + $this->refunded_count + $this->cancelled_count + $this->expired_count + $this->failed_count + $this->inactive_count;
+			}
+		}
+
 		$results = $query->get();
 
 		return $results;
