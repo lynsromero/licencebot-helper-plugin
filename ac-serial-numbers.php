@@ -3,7 +3,7 @@
  * Plugin Name: LicenceBot Helper Plugin
  * Plugin URI:  https://licencebot.com
  * Description: Auto-connects your store with LicenceBot for chat, cart recovery, serial number delivery, and more.
- * Version:     3.1.7
+ * Version:     3.1.8
  * Author:      Tic Limited
  * Author URI:  https://tic.com.bd
  * License:     GPLv2+
@@ -66,6 +66,7 @@ define('AC_SERIAL_OPT_STORE_ID', '_ac_serial_store_id');
 define('AC_SERIAL_OPT_STORE_TOKEN', '_ac_serial_store_token');
 define('AC_SERIAL_OPT_REGISTERED_AT', '_ac_serial_registered_at');
 define('AC_SERIAL_OPT_LAST_ERROR', '_ac_serial_last_error');
+define('AC_SERIAL_OPT_AUTH_SECRET', '_ac_serial_auth_secret');
 
 // Dynamic org_token (set via WP.org install flow)
 define('AC_SERIAL_OPT_ORG_TOKEN_DYNAMIC', '_ac_serial_org_token');
@@ -400,7 +401,7 @@ class AC_Serial_Numbers
 	 */
 	private function get_webhook_url()
 	{
-		return rest_url('ac-serial-numbers/v1/webhook/');
+		return rest_url('ac-serial-numbers/v1/order/update/');
 	}
 
 	/**
@@ -565,6 +566,11 @@ class AC_Serial_Numbers
 			update_option('ac_serial_numbers_api_key', $body['api_key']);
 		}
 
+		// Save webhook auth secret from LicenceBot (used for X-Webhook-Secret validation)
+		if (!empty($body['license_auth_secret'])) {
+			update_option(AC_SERIAL_OPT_AUTH_SECRET, $body['license_auth_secret']);
+		}
+
 		// Save registration timestamp
 		update_option(AC_SERIAL_OPT_REGISTERED_AT, current_time('timestamp'));
 
@@ -664,6 +670,11 @@ class AC_Serial_Numbers
 		}
 		if (!empty($body['store_token'])) {
 			update_option(AC_SERIAL_OPT_STORE_TOKEN, $body['store_token']);
+		}
+
+		// Save webhook auth secret from LicenceBot
+		if (!empty($body['license_auth_secret'])) {
+			update_option(AC_SERIAL_OPT_AUTH_SECRET, $body['license_auth_secret']);
 		}
 
 		// Now run the full registration

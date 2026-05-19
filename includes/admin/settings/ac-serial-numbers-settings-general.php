@@ -1,6 +1,19 @@
 <?php
 defined( 'ABSPATH' ) || exit();
 
+if ( ! defined( 'AC_SERIAL_OPT_AUTH_SECRET' ) ) {
+	define( 'AC_SERIAL_OPT_AUTH_SECRET', '_ac_serial_auth_secret' );
+}
+if ( ! defined( 'AC_SERIAL_OPT_STORE_ID' ) ) {
+	define( 'AC_SERIAL_OPT_STORE_ID', '_ac_serial_store_id' );
+}
+if ( ! defined( 'AC_SERIAL_OPT_REGISTERED_AT' ) ) {
+	define( 'AC_SERIAL_OPT_REGISTERED_AT', '_ac_serial_registered_at' );
+}
+if ( ! defined( 'AC_SERIAL_OPT_LAST_ERROR' ) ) {
+	define( 'AC_SERIAL_OPT_LAST_ERROR', '_ac_serial_last_error' );
+}
+
 if ( ! class_exists( 'AC_Serial_Numbers_Settings_General' ) ) :
 	/**
 	 * AC_Serial_Numbers_Settings_General
@@ -45,6 +58,8 @@ if ( ! class_exists( 'AC_Serial_Numbers_Settings_General' ) ) :
 			$store_id = get_option( AC_SERIAL_OPT_STORE_ID );
 			$registered_at = get_option( AC_SERIAL_OPT_REGISTERED_AT );
 			$last_error = get_option( AC_SERIAL_OPT_LAST_ERROR );
+			$auth_secret = get_option( AC_SERIAL_OPT_AUTH_SECRET );
+			$webhook_url = rest_url( 'ac-serial-numbers/v1/order/update/' );
 
 			// Build connection status HTML
 			$connection_status_html = '';
@@ -57,8 +72,13 @@ if ( ! class_exists( 'AC_Serial_Numbers_Settings_General' ) ) :
 				if ( $registered_at ) {
 					$connection_status_html .= '<p style="margin: 5px 0; font-size: 13px;">Connected on: ' . date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $registered_at ) . '</p>';
 				}
+				if ( $auth_secret ) {
+					$connection_status_html .= '<p style="margin: 5px 0; font-size: 13px;"><span style="color: #00a32a;">✅ Webhook Auth Secret:</span> Configured (delivery webhooks will be authenticated)</p>';
+				} else {
+					$connection_status_html .= '<p style="margin: 5px 0; font-size: 13px;"><span style="color: #d63638;">⚠️ Webhook Auth Secret:</span> Missing — delivery webhooks may fail. Re-connect or paste it below.</p>';
+				}
+				$connection_status_html .= '<p style="margin: 5px 0; font-size: 13px;">Webhook URL: <code>' . esc_html( $webhook_url ) . '</code></p>';
 
-				// Add disconnect button
 				$disconnect_url = wp_nonce_url(
 					add_query_arg( 'ac_serial_disconnect', '1', admin_url() ),
 					'ac_serial_disconnect'
@@ -257,15 +277,23 @@ if ( ! class_exists( 'AC_Serial_Numbers_Settings_General' ) ) :
 					'placeholder' => 'Paste your API key here',
 					'custom_attributes' => $is_licencebot_connected ? array( 'disabled' => 'disabled' ) : array(),
 				),
-				array(
-					'title'   => __( 'Auth Secret', 'ac-serial-numbers' ),
-					'id'    => 'ac_serial_numbers_webhook_secret',
-					'desc'    => $is_licencebot_connected ?
-						__( 'Auto-shared with LicenceBot during registration.', 'ac-serial-numbers' ) :
-						__( 'Copy this secret to your LicenceBot dashboard.', 'ac-serial-numbers' ),
-					'type'    => 'info',
-					'text' => get_option( '_ac_serial_numbers_webhook_secret', '' ),
-				),
+			array(
+				'title'   => __( 'Auth Secret', 'ac-serial-numbers' ),
+				'id'    => 'ac_serial_numbers_webhook_secret',
+				'desc'    => $is_licencebot_connected ?
+					__( 'Auto-shared with LicenceBot during registration.', 'ac-serial-numbers' ) :
+					__( 'Copy this secret to your LicenceBot dashboard.', 'ac-serial-numbers' ),
+				'type'    => 'info',
+				'text' => get_option( '_ac_serial_numbers_webhook_secret', '' ),
+			),
+			array(
+				'title'   => __( 'LicenceBot Webhook Auth Secret', 'ac-serial-numbers' ),
+				'id'    => AC_SERIAL_OPT_AUTH_SECRET,
+				'desc'    => __( 'Auto-filled during registration. Used to validate incoming delivery webhooks from LicenceBot (X-Webhook-Secret header). If empty, re-connect to LicenceBot or paste the auth_secret from LicenceBot Dashboard.', 'ac-serial-numbers' ),
+				'type'    => 'text',
+				'placeholder' => 'Auto-filled on registration',
+				'custom_attributes' => $is_licencebot_connected && ! empty( $auth_secret ) ? array( 'readonly' => 'readonly' ) : array(),
+			),
 				[
 					'type' => 'sectionend',
 					'id'   => 'api_key_section'
