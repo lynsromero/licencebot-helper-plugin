@@ -3,7 +3,7 @@
  * Plugin Name: LicenceBot Helper Plugin
  * Plugin URI:  https://licencebot.com
  * Description: Auto-connects your store with LicenceBot for chat, cart recovery, serial number delivery, and more.
- * Version:     3.1.8
+ * Version:     3.2.5
  * Author:      Tic Limited
  * Author URI:  https://tic.com.bd
  * License:     GPLv2+
@@ -1176,9 +1176,9 @@ function ac_fetch_products_data()
 			return false;
 		}
 
-		$response = wp_remote_get($url . '/product/stocks-all', [
-			'headers' => ['api-key' => $api_key, 'cb-platform' => get_home_url()]
-		]);
+		$response = wp_remote_get( $url . '/product/stocks-all', array(
+			'headers' => ac_serial_numbers_get_api_headers(),
+		) );
 		if (is_wp_error($response)) {
 			error_log("Error fetching data from API: " . $response->get_error_message());
 			$wp->query_vars['acsn_error'] = $response->get_error_message();

@@ -11,6 +11,36 @@ function ac_serial_numbers_get_user_role() {
 }
 
 /**
+ * Build standard API headers with store identity for all LicenceBot API calls.
+ *
+ * Includes api-key, cb-platform (site URL), x-store-id, and x-store-token
+ * so helper-api can resolve the correct store for passthrough requests.
+ *
+ * @param array $extra Additional headers to merge in.
+ * @return array
+ * @since 3.2.0
+ */
+function ac_serial_numbers_get_api_headers( $extra = array() ) {
+	$headers = array(
+		'Content-Type' => 'application/json',
+		'api-key'      => get_option( 'ac_serial_numbers_api_key' ),
+		'cb-platform'  => home_url(),
+	);
+
+	$store_id    = get_option( '_ac_serial_store_id' );
+	$store_token = get_option( '_ac_serial_store_token' );
+
+	if ( $store_id ) {
+		$headers['x-store-id'] = $store_id;
+	}
+	if ( $store_token ) {
+		$headers['x-store-token'] = $store_token;
+	}
+
+	return array_merge( $headers, $extra );
+}
+
+/**
  * Sanitize boolean
  *
  * @param $string
@@ -346,14 +376,10 @@ function ac_serial_numbers_get_serial_numbers( $order_item, $order, $order_id ) 
 	$url = 	get_option('ac_serial_numbers_api_endpoint');
 	$api_key = 	get_option('ac_serial_numbers_api_key');
 
-	$response = wp_remote_post($url . '/shop/new-order', [
-        'headers' => [
-            'api-key' => $api_key,
-            'Accept' => 'application/json',
-			'Content-Type' => 'application/json',
-        ],
-		'body' => json_encode($data),
-    ]);
+	$response = wp_remote_post( $url . '/shop/new-order', array(
+		'headers' => ac_serial_numbers_get_api_headers(),
+		'body'    => json_encode( $data ),
+	) );
 
 	if (is_wp_error($response)) {
         return 'Error: ' . $response->get_error_message();
@@ -831,14 +857,10 @@ function ac_serial_numbers_get_license_counts( $product_id = null, $store_id = n
 		$endpoint .= '?' . http_build_query( $params );
 	}
 
-	$response = wp_remote_get( $endpoint, [
-		'headers' => [
-			'api-key'      => $api_key,
-			'Accept'       => 'application/json',
-			'Content-Type' => 'application/json',
-		],
+	$response = wp_remote_get( $endpoint, array(
+		'headers' => ac_serial_numbers_get_api_headers(),
 		'timeout' => 20,
-	] );
+	) );
 
 	if ( is_wp_error( $response ) ) {
 		return false;
@@ -1091,13 +1113,7 @@ function ac_serial_numbers_sync_mapping_to_licencebot( $woo_product_id, $lb_prod
 		}
 	}
 
-	$headers = array(
-		'x-api-key'    => $api_key,
-		'Content-Type' => 'application/json',
-	);
-	if ( ! empty( $auth_secret ) ) {
-		$headers['x-auth-secret'] = $auth_secret;
-	}
+	$headers = ac_serial_numbers_get_api_headers();
 
 	$response = wp_remote_post( rtrim( $url, '/' ) . '/license-api/map', array(
 		'headers' => $headers,

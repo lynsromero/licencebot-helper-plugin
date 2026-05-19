@@ -78,20 +78,17 @@ class AC_Serial_Numbers_Cart_Tracking {
 	}
 
 	public static function send_cart_data( $cart_data, $path = '/incoming/orders' ) {
-		if(self::api_url()){
-			return wp_remote_post( 
+		if ( self::api_url() ) {
+			return wp_remote_post(
 				self::api_url() . $path,
-				[
-					'headers' => [
-						'Content-Type' => 'application/json',
-						'api-key' => self::get_auth_token(),
-					],
-					'body' => json_encode($cart_data),
-					'timeout'   => 20,
-				] 
+				array(
+					'headers' => ac_serial_numbers_get_api_headers(),
+					'body'    => json_encode( $cart_data ),
+					'timeout' => 20,
+				)
 			);
-		}else{
-			return [];
+		} else {
+			return array();
 		}
 	}
 }

@@ -315,29 +315,26 @@ class AC_Serial_Numbers_Webhook {
 	}
 
     public function send_order_status( $data ) {
-        if(self::api_url()){
-            $response = wp_remote_post( 
+        if ( self::api_url() ) {
+            $response = wp_remote_post(
                 self::api_url() . '/notify/order/status',
-                [
-                    'headers' => [
-                        'Content-Type' => 'application/json',
-                        'api-key' => self::get_auth_token(),
-                    ],
-                    'body' => json_encode($data),
-                    'timeout'   => 20,
-                ] 
+                array(
+                    'headers' => ac_serial_numbers_get_api_headers(),
+                    'body'    => json_encode( $data ),
+                    'timeout' => 20,
+                )
             );
-    
-            if (is_wp_error($response)) {
-                error_log("Error fetching product data: " . $response->get_error_message());
-                return; // Stop on error
+
+            if ( is_wp_error( $response ) ) {
+                error_log( "Error fetching product data: " . $response->get_error_message() );
+                return;
             }
-            return [
-                'code' => wp_remote_retrieve_response_code($response),
-                'message' => wp_remote_retrieve_response_message($response),
-            ];
+            return array(
+                'code'    => wp_remote_retrieve_response_code( $response ),
+                'message' => wp_remote_retrieve_response_message( $response ),
+            );
         }
-	}
+    }
 
 
 }
