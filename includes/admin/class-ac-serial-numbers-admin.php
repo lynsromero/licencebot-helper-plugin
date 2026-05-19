@@ -94,12 +94,29 @@ class AC_Serial_Numbers_Admin {
 				$selected_items = [];
 			}
 
+			$existing_ids = array_column($selected_items, 'id');
+
 			switch ($type){
 				case 'update':
-					if (!empty($post_id) && !empty($remote_product_id) && !empty($remote_product_title) && !in_array($remote_product_id, $selected_items)){
+					if (!empty($post_id) && !empty($remote_product_id) && !empty($remote_product_title) && !in_array($remote_product_id, $existing_ids)){
 						$selected_items[] = ["id" => $remote_product_id, "text" => $remote_product_title];
 						update_post_meta( $post_id, '_ac_remote_product', wp_json_encode(array_values($selected_items)) );
 						update_post_meta( $post_id, '_delivery_quantity', count($selected_items) );
+
+						$woo_product = wc_get_product( $post_id );
+						$woo_name    = $woo_product ? $woo_product->get_name() : '';
+						$woo_price   = $woo_product ? (float) $woo_product->get_price() : 0;
+
+						foreach ( $selected_items as $item ) {
+							ac_serial_numbers_sync_mapping_to_licencebot(
+								$post_id,
+								$item['id'],
+								$woo_name,
+								$woo_price,
+								'create'
+							);
+						}
+
 						wp_send_json_success(['message' => 'Item updated successfully!', 'updated_items' => $selected_items]);
 					}else{
 						wp_send_json_error(['message' => 'Invalid request']);
@@ -112,6 +129,15 @@ class AC_Serial_Numbers_Admin {
 						});
 						update_post_meta( $post_id, '_ac_remote_product', wp_json_encode(array_values($selected_items)) );
 						update_post_meta( $post_id, '_delivery_quantity', count($selected_items) );
+
+						ac_serial_numbers_sync_mapping_to_licencebot(
+							$post_id,
+							$remote_product_id,
+							'',
+							0,
+							'delete'
+						);
+
 						wp_send_json_success(['message' => 'Item updated successfully!', 'updated_items' => $selected_items]);
 
 					}else{

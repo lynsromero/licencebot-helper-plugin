@@ -188,7 +188,17 @@ class AC_Serial_Numbers_Admin_MetaBoxes {
 		update_post_meta( $post->ID, '_ac_serial_numbers_key_source', $source );
 
 		if(isset($_POST['_ac_remote_product_id']) && !empty($_POST['_ac_remote_product_id'])){
-			update_post_meta( $post->ID, '_ac_remote_product_id', sanitize_text_field( $_POST['_ac_remote_product_id'] ) );
+			$remote_id = sanitize_text_field( $_POST['_ac_remote_product_id'] );
+			update_post_meta( $post->ID, '_ac_remote_product_id', $remote_id );
+
+			$woo_product = wc_get_product( $post->ID );
+			ac_serial_numbers_sync_mapping_to_licencebot(
+				$post->ID,
+				$remote_id,
+				$woo_product ? $woo_product->get_name() : '',
+				$woo_product ? (float) $woo_product->get_price() : 0,
+				'create'
+			);
 		}
 		if(isset($_POST['_ac_remote_product_title']) && !empty($_POST['_ac_remote_product_title'])){
 			update_post_meta( $post->ID, '_ac_remote_product_title', sanitize_text_field( $_POST['_ac_remote_product_title'] ) );

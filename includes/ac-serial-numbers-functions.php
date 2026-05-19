@@ -235,8 +235,6 @@ function ac_serial_numbers_order_connect_serial_numbers( $order_id ) {
 		$source = ac_serial_numbers_product_serial_source_type( $product_id ) ? 'reseller' : 'custom_source';
 		do_action( 'ac_serial_numbers_pre_order_item_connect_serial_numbers', $product_id, $total_delivery_qty, $source, $order_id );
 
-		// try new wey to get serial numbers
-		
 		if ( 'custom_source' === $source ) {
 			$serials = AC_Serial_Numbers_Query::init()->table( 'serial_numbers' )
 												->where( 'product_id', $product_id )
@@ -257,81 +255,64 @@ function ac_serial_numbers_order_connect_serial_numbers( $order_id ) {
 					) );
 				$total_added += $updated ? 1 : 0;
 			}
-		}
-		// Check if product key source_type 
-		// if ( ac_serial_numbers_product_serial_source_type( $product_id ) ) {
+		} elseif ( 'reseller' === $source ) {
+			$system_activation_guide = get_option('ac_serial_numbers_system_activation_guide') ?? false;
+			$system_support_email = get_option('ac_serial_numbers_support_email') ?? false;
+			$logger = wc_get_logger();
+			$logger_context = ['source' => 'licencebot-reseller-delivery'];
 
-		// 	// now get serial numbers from remote
-		// 	$serial_numbers = ac_serial_numbers_get_serial_numbers( $item, $order, $order_id );
+			$serial_numbers = ac_serial_numbers_get_serial_numbers( $item, $order, $order_id );
 			
-		// 	$data = isset($serial_numbers['data']) ? $serial_numbers['data'] : [];
-		// 	if(count($data) > 0 && null != $data['serialKeys']){
-				
-		// 		if(is_array($data['serialKeys']) && count($data['serialKeys']) > 0){
-					
-		// 			$keys = isset($data['serialKeys']) ? $data['serialKeys'] : [];
-					
-		// 			foreach ($keys as $key) {
-		// 				$help_text = !empty($system_activation_guide) ? $system_activation_guide . ' | Support Email: ' . $system_support_email : $key['activationGuide'] . ' | Support Email: ' . $system_support_email;
-		// 				$result = $wpdb->insert(
-		// 					$wpdb->prefix . 'serial_numbers',
-		// 					array(
-		// 						'serial_key' => $key['serialNumber'] . ' | ' . $help_text ?? '',
-		// 						'product_id' => $product_id,
-		// 						'activation_limit' => $key['activation_limit'] ?? 1,
-		// 						'activation_count' => 0,
-		// 						'order_id'   => $order_id,
-		// 						'vendor_id' => $key['supplierId'] ?? '',
-		// 						'status' => 'sold',
-		// 						'validity' => null,						
-		// 						'order_date' => current_time( 'mysql' ),
-		// 						'source' => 'reseller',
-		// 						'created_date' => current_time( 'mysql' ),
-		// 					)
-		// 				);
-		// 				$total_added += $result ? 1 : 0;
-		// 			}
-		// 		}else{
-		// 			$result = $wpdb->insert(
-		// 				$wpdb->prefix . 'serial_numbers',
-		// 				array(
-		// 					'serial_key' => $data['reason'] ?? '',
-		// 					'product_id' => $product_id,
-		// 					'activation_limit' => '',
-		// 					'activation_count' => 0,
-		// 					'order_id'   => $order_id,
-		// 					'status' => 'sold',
-		// 					'validity' => null,						
-		// 					'order_date' => current_time( 'mysql' ),
-		// 					'source' => 'reseller',
-		// 					'created_date' => current_time( 'mysql' ),
-		// 				)
-		// 			);
-		// 			$total_added += $result ? 1 : 0;
-		// 		}
-		// 	}
-			
-		// }else{
-		// 	$serials = AC_Serial_Numbers_Query::init()->table( 'serial_numbers' )
-		// 									  ->where( 'product_id', $product_id )
-		// 									  ->where( 'status', 'available' )
-		// 									  ->where( 'source', $source )
-		// 									  ->limit( $total_delivery_qty )
-		// 									  ->column( 0 );
-		// 	foreach ( $serials as $serial_id ) {
-		// 		$updated     = $wpdb->update(
-		// 			$wpdb->prefix . 'serial_numbers',
-		// 			array(
-		// 				'order_id'   => $order_id,
-		// 				'status'     => 'sold',
-		// 				'order_date' => current_time( 'mysql' ),
-		// 			),
-		// 			array(
-		// 				'id' => $serial_id
-		// 			) );
-		// 		$total_added += $updated ? 1 : 0;
-		// 	}
-		// }
+			if ( is_array( $serial_numbers ) && isset( $serial_numbers['data'] ) ) {
+				$data = $serial_numbers['data'];
+				if ( isset( $data['serialKeys'] ) && is_array( $data['serialKeys'] ) && count( $data['serialKeys'] ) > 0 ) {
+					$keys = $data['serialKeys'];
+					foreach ( $keys as $key ) {
+						$serial_number = $key['serialNumber'] ?? '';
+						if ( empty( $serial_number ) ) {
+							continue;
+						}
+						$help_text = !empty( $system_activation_guide ) ? $system_activation_guide . ' | Support Email: ' . $system_support_email : ( $key['activationGuide'] ?? '' ) . ' | Support Email: ' . $system_support_email;
+						$serial_key_value = $serial_number . ' | ' . $help_text;
+						$encrypted_key = ac_serial_numbers_encrypt_key( $serial_key_value );
+
+						$existing = $wpdb->get_var( $wpdb->prepare(
+							"SELECT id FROM {$wpdb->prefix}serial_numbers WHERE product_id=%d AND serial_key=%s AND order_id=%d",
+							$product_id,
+							$encrypted_key,
+							$order_id
+						) );
+
+						if ( $existing ) {
+							continue;
+						}
+
+						$result = $wpdb->insert(
+							$wpdb->prefix . 'serial_numbers',
+							array(
+								'serial_key'       => $encrypted_key,
+								'product_id'       => $product_id,
+								'activation_limit' => $key['activation_limit'] ?? 1,
+								'activation_count' => 0,
+								'order_id'         => $order_id,
+								'vendor_id'        => $key['supplierId'] ?? '',
+								'status'           => 'sold',
+								'validity'         => null,
+								'order_date'       => current_time( 'mysql' ),
+								'source'           => 'reseller',
+								'created_date'     => current_time( 'mysql' ),
+							)
+						);
+						$total_added += $result ? 1 : 0;
+					}
+					$logger->info( 'Reseller delivery: Order #' . $order_id . ' — Inserted ' . count( $keys ) . ' keys for product #' . $product_id, $logger_context );
+				} elseif ( isset( $data['reason'] ) ) {
+					$logger->warning( 'Reseller delivery: Order #' . $order_id . ' — API returned reason: ' . $data['reason'], $logger_context );
+				}
+			} else {
+				$logger->warning( 'Reseller delivery: Order #' . $order_id . ' — Invalid API response for product #' . $product_id, $logger_context );
+			}
+		}
 	}
 	do_action( 'ac_serial_numbers_order_connect_serial_numbers', $order_id, $total_added );
 	return $total_added;
@@ -1063,3 +1044,86 @@ function ac_serial_numbers_control_order_table_columns( $columns ) {
 }
 
 add_filter( 'ac_serial_numbers_order_table_columns', 'ac_serial_numbers_control_order_table_columns', 99 );
+
+/**
+ * Sync a product mapping to LicenceBot.
+ *
+ * Sends the WooCommerce product → LicenceBot product mapping to the
+ * LicenceBot API so that order delivery can resolve the correct license keys.
+ *
+ * @param int    $woo_product_id     WooCommerce product ID (remote_product_id).
+ * @param string $lb_product_id      LicenceBot product UUID (license_product_id).
+ * @param string $woo_product_name   WooCommerce product name (optional).
+ * @param float  $woo_product_price  WooCommerce product price (optional).
+ * @param string $action             'create' or 'delete'.
+ *
+ * @return bool|WP_Error True on success, WP_Error on failure, false if API not configured.
+ * @since 3.2.0
+ */
+function ac_serial_numbers_sync_mapping_to_licencebot( $woo_product_id, $lb_product_id, $woo_product_name = '', $woo_product_price = 0, $action = 'create' ) {
+	$url         = get_option( 'ac_serial_numbers_api_endpoint' );
+	$api_key     = get_option( 'ac_serial_numbers_api_key' );
+	$auth_secret = get_option( '_ac_serial_auth_secret' );
+
+	if ( empty( $url ) || empty( $api_key ) ) {
+		return false;
+	}
+
+	$logger = wc_get_logger();
+	$context = array( 'source' => 'licencebot-mapping-sync' );
+
+	if ( $action === 'delete' ) {
+		$body = array(
+			'remote_product_id'  => (int) $woo_product_id,
+			'license_product_id' => $lb_product_id,
+			'is_active'          => false,
+		);
+	} else {
+		$body = array(
+			'remote_product_id'  => (int) $woo_product_id,
+			'license_product_id' => $lb_product_id,
+		);
+		if ( ! empty( $woo_product_name ) ) {
+			$body['remote_product_name'] = $woo_product_name;
+		}
+		if ( $woo_product_price > 0 ) {
+			$body['remote_product_price'] = (float) $woo_product_price;
+		}
+	}
+
+	$headers = array(
+		'x-api-key'    => $api_key,
+		'Content-Type' => 'application/json',
+	);
+	if ( ! empty( $auth_secret ) ) {
+		$headers['x-auth-secret'] = $auth_secret;
+	}
+
+	$response = wp_remote_post( rtrim( $url, '/' ) . '/license-api/map', array(
+		'headers' => $headers,
+		'body'    => wp_json_encode( $body ),
+		'timeout' => 15,
+	) );
+
+	if ( is_wp_error( $response ) ) {
+		$logger->warning( 'Mapping sync failed (network): Woo product #' . $woo_product_id . ' → LB ' . $lb_product_id . ' — ' . $response->get_error_message(), $context );
+		return $response;
+	}
+
+	$response_code = wp_remote_retrieve_response_code( $response );
+	$result        = json_decode( wp_remote_retrieve_body( $response ), true );
+
+	if ( $response_code < 200 || $response_code >= 300 ) {
+		$error_msg = isset( $result['error'] ) ? $result['error'] : 'HTTP ' . $response_code;
+		$logger->warning( 'Mapping sync HTTP error: Woo product #' . $woo_product_id . ' → LB ' . $lb_product_id . ' — ' . $error_msg, $context );
+		return new WP_Error( 'mapping_sync_error', $error_msg );
+	}
+
+	if ( ! empty( $result['success'] ) ) {
+		$logger->info( 'Mapping synced: Woo product #' . $woo_product_id . ' → LB ' . $lb_product_id . ' (' . $action . ')', $context );
+		return true;
+	}
+
+	$logger->warning( 'Mapping sync unexpected response: Woo product #' . $woo_product_id . ' → LB ' . $lb_product_id . ' — ' . wp_json_encode( $result ), $context );
+	return new WP_Error( 'mapping_sync_error', 'Unexpected API response' );
+}
