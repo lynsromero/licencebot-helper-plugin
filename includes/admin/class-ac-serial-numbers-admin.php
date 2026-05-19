@@ -22,6 +22,7 @@ class AC_Serial_Numbers_Admin {
 		add_action( 'wp_ajax_ac_serial_numbers_update_product_mapping_from_shop_order', array( $this, 'update_product_mapping_shop_order' ) );
 		add_action( 'wp_ajax_ac_serial_numbers_clear_transient_data', array( $this, 'ac_serial_numbers_clear_transient_data' ) );
 		add_action( 'wp_ajax_ac_serial_numbers_request_new_keys', array( $this, 'ac_serial_numbers_request_new_keys' ) );
+		add_action( 'wp_ajax_ac_serial_numbers_sync_all_mappings', array( $this, 'sync_all_mappings' ) );
 	}
 
 	public function ac_serial_numbers_request_new_keys(){
@@ -180,6 +181,81 @@ class AC_Serial_Numbers_Admin {
 			}
 		}
 		die(1);
+	}
+
+	public function sync_all_mappings() {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+		}
+
+		$products = get_posts( array(
+			'post_type'      => 'product',
+			'posts_per_page' => -1,
+			'meta_query'     => array(
+				array(
+					'key'     => '_ac_remote_product',
+					'value'   => '',
+					'compare' => '!=',
+				),
+			),
+		) );
+
+		if ( empty( $products ) ) {
+			wp_send_json_success( array(
+				'synced'  => 0,
+				'failed'  => 0,
+				'message' => 'No product mappings found to sync.',
+			) );
+		}
+
+		$synced = 0;
+		$failed = 0;
+		$errors = array();
+
+		foreach ( $products as $product ) {
+			$woo_product  = wc_get_product( $product->ID );
+			$woo_name     = $woo_product ? $woo_product->get_name() : '';
+			$woo_price    = $woo_product ? (float) $woo_product->get_price() : 0;
+			$remote_items = get_post_meta( $product->ID, '_ac_remote_product', true );
+			$remote_items = ! empty( $remote_items ) ? json_decode( $remote_items, true ) : array();
+
+			if ( ! is_array( $remote_items ) ) {
+				continue;
+			}
+
+			foreach ( $remote_items as $item ) {
+				if ( empty( $item['id'] ) ) {
+					continue;
+				}
+
+				$result = ac_serial_numbers_sync_mapping_to_licencebot(
+					$product->ID,
+					$item['id'],
+					$woo_name,
+					$woo_price,
+					'create'
+				);
+
+				if ( is_wp_error( $result ) ) {
+					$failed++;
+					$errors[] = array(
+						'product_id' => $product->ID,
+						'product_name' => $woo_name,
+						'lb_id'      => $item['id'],
+						'error'      => $result->get_error_message(),
+					);
+				} else {
+					$synced++;
+				}
+			}
+		}
+
+		wp_send_json_success( array(
+			'synced'  => $synced,
+			'failed'  => $failed,
+			'errors'  => $errors,
+			'message' => sprintf( '%d mappings synced, %d failed.', $synced, $failed ),
+		) );
 	}
 
 	function ac_serial_numbers_clear_transient_data() {

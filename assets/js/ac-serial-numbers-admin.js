@@ -22,6 +22,7 @@
 			plugin.encrypt_decrypt();
 			plugin.request_keys('#request-keys-items');
 			plugin.sync_order();
+			plugin.sync_all_mappings();
 		};
 
 		plugin.init_select2_mapping = function (el, data, placeholder) {
@@ -508,6 +509,52 @@
 					error: function() {
 						alert('Request failed. Please try again.');
 						$btn.prop('disabled', false).text(originalText);
+					}
+				});
+			});
+		}
+
+		plugin.sync_all_mappings = function(){
+			$(document).on('click', '#ac-sync-all-mappings', function(){
+				var $btn = $(this);
+				var $result = $('#ac-sync-all-mappings-result');
+				var originalText = $btn.text();
+
+				if (!confirm('Sync all product mappings to LicenceBot? This may take a moment.')) {
+					return;
+				}
+
+				$btn.prop('disabled', true).text('Syncing...');
+				$result.html('<p style="color: #72aee6;">Syncing mappings, please wait...</p>');
+
+				$.ajax({
+					url: ac_serial_numbers_admin_i10n.ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'ac_serial_numbers_sync_all_mappings',
+						nonce: ac_serial_numbers_admin_i10n.nonce
+					},
+					success: function(response) {
+						$btn.prop('disabled', false).text(originalText);
+						if (response.success) {
+							var msg = response.data.message;
+							var color = response.data.failed > 0 ? '#d63638' : '#00a32a';
+							$result.html('<p style="color: ' + color + '; font-weight: bold;">' + msg + '</p>');
+							if (response.data.errors && response.data.errors.length > 0) {
+								var errorList = '<ul style="color: #d63638; font-size: 12px;">';
+								response.data.errors.forEach(function(err) {
+									errorList += '<li>' + err.product_name + ' (#' + err.product_id + ') → ' + err.error + '</li>';
+								});
+								errorList += '</ul>';
+								$result.append(errorList);
+							}
+						} else {
+							$result.html('<p style="color: #d63638;">' + (response.data && response.data.message ? response.data.message : 'Sync failed.') + '</p>');
+						}
+					},
+					error: function() {
+						$btn.prop('disabled', false).text(originalText);
+						$result.html('<p style="color: #d63638;">Request failed. Please try again.</p>');
 					}
 				});
 			});

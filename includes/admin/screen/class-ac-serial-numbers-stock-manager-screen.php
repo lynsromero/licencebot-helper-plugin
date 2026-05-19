@@ -17,6 +17,8 @@ class AC_Serial_Numbers_Admin_Stock_Manager_Screen {
     ?>
 		<div class="wrap">
 			<h1 class="wp-heading-inline"><?php _e( 'Stock Manager', 'ac-serial-numbers' ); ?></h1>
+			<button type="button" id="ac-sync-all-mappings" class="button button-secondary"><?php _e( 'Sync All Mappings to LicenceBot', 'ac-serial-numbers' ); ?></button>
+			<div id="ac-sync-all-mappings-result" style="margin-top: 10px;"></div>
       
       
       <?php if($count_incident > 0) { ?>
