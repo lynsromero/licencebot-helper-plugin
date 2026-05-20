@@ -282,7 +282,7 @@ add_action( 'admin_enqueue_scripts', function() {
 	if ( ! $screen ) {
 		return;
 	}
-	if ( $screen->id !== 'woocommerce_page_ac-serial-numbers-settings' ) {
+	if ( $screen->id !== 'ac-serial-numbers_page_ac-serial-numbers-settings' ) {
 		return;
 	}
 	if ( ! isset( $_GET['tab'] ) || $_GET['tab'] !== 'updates' ) {
