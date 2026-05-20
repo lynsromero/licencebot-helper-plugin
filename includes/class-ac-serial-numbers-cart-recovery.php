@@ -16,6 +16,10 @@ class AC_Serial_Numbers_Cart_Recovery {
 			return;
 		}
 
+		if ( get_option( AC_SERIAL_CART_RECOVERY_ENABLED, 'no' ) !== 'yes' ) {
+			return;
+		}
+
 		$cart = WC()->cart;
 		if ( ! $cart || $cart->is_empty() ) {
 			return;
@@ -61,6 +65,10 @@ class AC_Serial_Numbers_Cart_Recovery {
 	public static function mark_cart_recovered( $order_id ) {
 		$store_id = get_option( AC_SERIAL_OPT_STORE_ID );
 		if ( empty( $store_id ) ) {
+			return;
+		}
+
+		if ( get_option( AC_SERIAL_CART_RECOVERY_ENABLED, 'no' ) !== 'yes' ) {
 			return;
 		}
 

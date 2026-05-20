@@ -127,6 +127,7 @@ class AC_Serial_Numbers_Helper_Features {
 		$enabled       = get_option( $feature['enabled_option'], 'no' ) === 'yes';
 		$stored_code   = get_option( $feature['code_option'], '' );
 		$fetched_at    = get_option( $feature['fetched_at_option'], 0 );
+		$requires_fetch = ! empty( $feature['code_option'] );
 
 		$status_class = '';
 		$status_text  = '';
@@ -137,13 +138,13 @@ class AC_Serial_Numbers_Helper_Features {
 		} elseif ( ! $enabled ) {
 			$status_class = 'warning';
 			$status_text  = 'Disabled locally — enable the toggle and click Save Changes.';
-		} elseif ( empty( $stored_code ) ) {
+		} elseif ( $requires_fetch && empty( $stored_code ) ) {
 			$status_class = 'info';
 			$status_text  = 'Not fetched yet — enable and click Save Changes to fetch from LicenceBot.';
 		} else {
 			$status_class = 'success';
 			$status_text  = 'Connected';
-			if ( $fetched_at ) {
+			if ( $requires_fetch && $fetched_at ) {
 				$status_text .= ' (updated ' . human_time_diff( $fetched_at, current_time( 'timestamp' ) ) . ' ago)';
 			}
 		}
