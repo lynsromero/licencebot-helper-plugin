@@ -34,7 +34,12 @@ class AC_Serial_Numbers_Settings_Helper_Plugin extends WC_Settings_Page {
 			$enabled = isset( $_POST[ $config['enabled_option'] ] );
 			update_option( $config['enabled_option'], $enabled ? 'yes' : 'no' );
 
-			if ( ! $enabled ) {
+			if ( $enabled ) {
+				$result = AC_Serial_Numbers_Helper_Features::fetch_code( $slug );
+				if ( is_wp_error( $result ) ) {
+					error_log( 'LicenceBot helper feature fetch failed [' . $slug . ']: ' . $result->get_error_message() );
+				}
+			} else {
 				delete_option( $config['code_option'] );
 				delete_transient( 'lb_' . $slug . '_html' );
 			}

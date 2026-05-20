@@ -85,7 +85,6 @@ class AC_Serial_Numbers_Helper_Features {
 			'success'    => true,
 			'embed_html' => $embed_html,
 			'widget_id'  => $widget_id,
-			'endpoint'   => $url,
 		);
 	}
 
@@ -137,24 +136,16 @@ class AC_Serial_Numbers_Helper_Features {
 			$status_text  = 'Not connected — connect to LicenceBot in the General tab first.';
 		} elseif ( ! $enabled ) {
 			$status_class = 'warning';
-			$status_text  = 'Disabled locally — enable the toggle to activate.';
+			$status_text  = 'Disabled locally — enable the toggle and click Save Changes.';
 		} elseif ( empty( $stored_code ) ) {
 			$status_class = 'info';
-			$status_text  = 'Not fetched yet — click "Fetch Code" to retrieve from LicenceBot.';
+			$status_text  = 'Not fetched yet — enable and click Save Changes to fetch from LicenceBot.';
 		} else {
 			$status_class = 'success';
 			$status_text  = 'Connected';
 			if ( $fetched_at ) {
 				$status_text .= ' (updated ' . human_time_diff( $fetched_at, current_time( 'timestamp' ) ) . ' ago)';
 			}
-		}
-
-		$endpoint_url = '';
-		if ( $is_registered ) {
-			$endpoint_url = add_query_arg(
-				array( 'store_id' => $store_id, 't' => $token ),
-				AC_SERIAL_HELPER_FEATURES_API_BASE . '/' . $feature['api_endpoint']
-			);
 		}
 		?>
 		<style>
@@ -200,46 +191,7 @@ class AC_Serial_Numbers_Helper_Features {
 						</span>
 					</td>
 				</tr>
-				<tr>
-					<th scope="row">API Endpoint</th>
-					<td>
-						<?php if ( $endpoint_url ) : ?>
-							<code style="word-break:break-all;"><?php echo esc_url( $endpoint_url ); ?></code>
-						<?php else : ?>
-							<em>Connect to LicenceBot first.</em>
-						<?php endif; ?>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row">
-						<label>Paste before closing <code>&lt;/body&gt;</code> tag</label>
-					</th>
-					<td>
-						<textarea
-							id="ac-<?php echo esc_attr( $slug ); ?>-code-display"
-							class="large-text code"
-							rows="4"
-							readonly
-							style="font-family:monospace;font-size:12px;"
-						><?php echo esc_textarea( $stored_code ); ?></textarea>
-						<p class="description">
-							This code is fetched from LicenceBot and auto-updates daily.
-						</p>
-					</td>
-				</tr>
 			</table>
-
-			<div id="ac-<?php echo esc_attr( $slug ); ?>-fetch-status" style="margin:10px 0;"></div>
-
-			<button
-				type="button"
-				class="button button-primary ac-fetch-feature"
-				data-feature="<?php echo esc_attr( $slug ); ?>"
-				data-nonce="<?php echo wp_create_nonce( 'ac-serial-numbers-settings' ); ?>"
-				<?php disabled( ! $is_registered ); ?>
-			>
-				<?php _e( 'Fetch Code', 'ac-serial-numbers' ); ?>
-			</button>
 
 			<?php if ( ! $is_registered ) : ?>
 				<p style="color:#d63638;margin-top:10px;">
@@ -253,53 +205,6 @@ class AC_Serial_Numbers_Helper_Features {
 
 endif;
 
-add_action( 'wp_ajax_ac_fetch_helper_feature', function() {
-	check_ajax_referer( 'ac-serial-numbers-settings', 'security' );
-
-	if ( ! current_user_can( 'manage_woocommerce' ) ) {
-		wp_send_json_error( array( 'msg' => 'Insufficient permissions.' ) );
-	}
-
-	$slug = sanitize_text_field( $_POST['feature'] );
-	$result = AC_Serial_Numbers_Helper_Features::fetch_code( $slug );
-
-	if ( is_wp_error( $result ) ) {
-		wp_send_json_error( array( 'msg' => $result->get_error_message() ) );
-	}
-
-	wp_send_json_success( array(
-		'embed_html' => $result['embed_html'],
-		'widget_id'  => $result['widget_id'],
-		'endpoint'   => $result['endpoint'],
-	));
-});
-
 add_action( 'wp_footer', function() {
 	AC_Serial_Numbers_Helper_Features::render_frontend();
 }, 100 );
-
-add_action( 'admin_enqueue_scripts', function() {
-	$screen = get_current_screen();
-	if ( ! $screen ) {
-		return;
-	}
-	if ( $screen->id !== 'ac-serial-numbers_page_ac-serial-numbers-settings' ) {
-		return;
-	}
-	if ( ! isset( $_GET['tab'] ) || $_GET['tab'] !== 'helper-plugin' ) {
-		return;
-	}
-
-	wp_enqueue_script(
-		'ac-helper-features-admin',
-		ac_serial_numbers()->plugin_url() . '/assets/js/ac-helper-features-admin.js',
-		array( 'jquery' ),
-		AC_SERIAL_NUMBER_PLUGIN_VERSION,
-		true
-	);
-
-	wp_localize_script( 'ac-helper-features-admin', 'acHelperFeatures', array(
-		'ajaxurl' => admin_url( 'admin-ajax.php' ),
-		'nonce'   => wp_create_nonce( 'ac-serial-numbers-settings' ),
-	));
-});
