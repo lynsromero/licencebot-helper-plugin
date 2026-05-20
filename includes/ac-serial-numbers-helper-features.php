@@ -147,6 +147,11 @@ class AC_Serial_Numbers_Helper_Features {
 				$status_text .= ' (updated ' . human_time_diff( $fetched_at, current_time( 'timestamp' ) ) . ' ago)';
 			}
 		}
+
+		$helper_text = '';
+		if ( $slug === 'cart_recovery' ) {
+			$helper_text = '<p style="color:#666;font-size:13px;margin-top:8px;">' . __( 'Tracks abandoned carts via a non-blocking background request — no impact on page load.', 'ac-serial-numbers' ) . '</p>';
+		}
 		?>
 		<style>
 			.ac-feature-status { display:inline-block; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:500; }
@@ -156,10 +161,13 @@ class AC_Serial_Numbers_Helper_Features {
 			.ac-status-info     { background:#d1ecf1; color:#0c5460; border:1px solid #bee5eb; }
 			.ac-helper-feature-card { margin-bottom:24px; padding-bottom:24px; border-bottom:1px solid #eee; }
 			.ac-helper-feature-card:last-child { border-bottom:none; }
+			.ac-feature-subsection { margin-bottom:30px; }
+			.ac-feature-subsection h4 { margin:0 0 15px; font-size:14px; color:#23282d; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #ddd; padding-bottom:8px; }
 		</style>
 		<div class="ac-helper-feature-card" id="ac-feature-card-<?php echo esc_attr( $slug ); ?>">
 			<h3><?php echo esc_html( $feature['title'] ); ?></h3>
 			<p style="color:#666;"><?php echo esc_html( $feature['description'] ); ?></p>
+			<?php echo $helper_text; ?>
 
 			<table class="form-table">
 				<tr>
@@ -200,6 +208,36 @@ class AC_Serial_Numbers_Helper_Features {
 			<?php endif; ?>
 		</div>
 		<?php
+	}
+
+	public static function render_grouped_cards() {
+		$features = self::$features;
+		$widgets = array();
+		$tracking = array();
+
+		foreach ( $features as $slug => $config ) {
+			if ( $slug === 'cart_recovery' ) {
+				$tracking[ $slug ] = $config;
+			} else {
+				$widgets[ $slug ] = $config;
+			}
+		}
+
+		if ( ! empty( $widgets ) ) {
+			echo '<div class="ac-feature-subsection"><h4>' . __( 'Storefront Widgets', 'ac-serial-numbers' ) . '</h4>';
+			foreach ( $widgets as $slug => $config ) {
+				self::render_card( $slug );
+			}
+			echo '</div>';
+		}
+
+		if ( ! empty( $tracking ) ) {
+			echo '<div class="ac-feature-subsection"><h4>' . __( 'Tracking & Recovery', 'ac-serial-numbers' ) . '</h4>';
+			foreach ( $tracking as $slug => $config ) {
+				self::render_card( $slug );
+			}
+			echo '</div>';
+		}
 	}
 }
 

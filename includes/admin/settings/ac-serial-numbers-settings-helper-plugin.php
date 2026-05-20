@@ -22,9 +22,7 @@ class AC_Serial_Numbers_Settings_Helper_Plugin extends WC_Settings_Page {
 			return;
 		}
 
-		foreach ( $features as $slug => $config ) {
-			AC_Serial_Numbers_Helper_Features::render_card( $slug );
-		}
+		AC_Serial_Numbers_Helper_Features::render_grouped_cards();
 	}
 
 	public function save() {
