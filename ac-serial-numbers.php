@@ -85,7 +85,7 @@ class AC_Serial_Numbers
 	 * @var string
 	 * @since 1.0.0
 	 */
-	public $version = '3.1.7';
+	public $version = '3.2.9';
 
 	/**
 	 * This plugin's instance
@@ -714,6 +714,7 @@ class AC_Serial_Numbers
 		if (!empty($store_token)) {
 			$script_url .= '&t=' . rawurlencode($store_token);
 		}
+		$script_url .= '&exclude=newsletter';
 
 		// Enqueue the script
 		// true = load in footer (before </body>)
@@ -961,6 +962,8 @@ class AC_Serial_Numbers
 		require_once dirname(__FILE__) . '/includes/class-ac-serial-numbers-updater.php';
 		require_once dirname(__FILE__) . '/includes/ac-serial-numbers-helper-features.php';
 		require_once dirname(__FILE__) . '/includes/ac-serial-numbers-chat-widget.php';
+		require_once dirname(__FILE__) . '/includes/ac-serial-numbers-newsletter.php';
+		require_once dirname(__FILE__) . '/includes/ac-serial-numbers-contact-form.php';
 		do_action('ac_serial_numbers__loaded');
 		// add_action('rest_api_init', array($this, 'products_ids_route'));
 		// add_action('rest_api_init', array($this, 'products_updated_route'));
