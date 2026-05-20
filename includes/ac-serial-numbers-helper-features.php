@@ -278,14 +278,10 @@ add_action( 'wp_ajax_ac_check_for_updates', function() {
 });
 
 add_action( 'admin_enqueue_scripts', function() {
-	$screen = get_current_screen();
-	if ( ! $screen ) {
-		return;
-	}
-	if ( $screen->id !== 'ac-serial-numbers_page_ac-serial-numbers-settings' ) {
-		return;
-	}
-	if ( ! isset( $_GET['tab'] ) || $_GET['tab'] !== 'updates' ) {
+	$page = isset( $_GET['page'] ) ? $_GET['page'] : '';
+	$tab = isset( $_GET['tab'] ) ? $_GET['tab'] : '';
+
+	if ( $page !== 'ac-serial-numbers-settings' || $tab !== 'updates' ) {
 		return;
 	}
 
