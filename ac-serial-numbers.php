@@ -3,7 +3,7 @@
  * Plugin Name: LicenceBot Helper Plugin
  * Plugin URI:  https://licencebot.com
  * Description: Auto-connects your store with LicenceBot for chat, cart recovery, serial number delivery, and more.
- * Version:     3.2.9
+ * Version:     3.3.0
  * Author:      Tic Limited
  * Author URI:  https://tic.com.bd
  * License:     GPLv2+
