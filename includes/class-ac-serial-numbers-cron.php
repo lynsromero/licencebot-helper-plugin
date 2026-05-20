@@ -9,6 +9,7 @@ class AC_Serial_Numbers_CRON {
 	public static function init() {
 		add_action( 'ac_serial_numbers_hourly_event', array( __CLASS__, 'expire_outdated_serials' ) );
 		add_action( 'ac_serial_numbers_daily_event', array( __CLASS__, 'send_stock_alert_email' ) );
+		add_action( 'ac_serial_numbers_daily_event', array( __CLASS__, 'refresh_helper_features' ) );
 	}
 
 	/**
@@ -59,6 +60,31 @@ class AC_Serial_Numbers_CRON {
 		$mailer->send( $to, $subject, $message, $headers, array() );
 
 		exit();
+	}
+
+	public static function refresh_helper_features() {
+		if ( ! class_exists( 'AC_Serial_Numbers_Helper_Features' ) ) {
+			return;
+		}
+
+		$features = AC_Serial_Numbers_Helper_Features::get_all();
+		foreach ( $features as $slug => $config ) {
+			$enabled = get_option( $config['enabled_option'], 'no' );
+			if ( $enabled !== 'yes' ) {
+				continue;
+			}
+
+			$store_id = get_option( AC_SERIAL_OPT_STORE_ID );
+			$token    = get_option( AC_SERIAL_OPT_STORE_TOKEN );
+			if ( empty( $store_id ) || empty( $token ) ) {
+				continue;
+			}
+
+			$result = AC_Serial_Numbers_Helper_Features::fetch_code( $slug );
+			if ( is_wp_error( $result ) ) {
+				error_log( 'LicenceBot helper feature refresh failed [' . $slug . ']: ' . $result->get_error_message() );
+			}
+		}
 	}
 }
 
