@@ -3,7 +3,7 @@
  * Plugin Name: LicenceBot Helper Plugin
  * Plugin URI:  https://licencebot.com
  * Description: Auto-connects your store with LicenceBot for chat, cart recovery, serial number delivery, and more.
- * Version:     3.2.7
+ * Version:     3.2.9
  * Author:      Tic Limited
  * Author URI:  https://tic.com.bd
  * License:     GPLv2+
@@ -271,8 +271,6 @@ class AC_Serial_Numbers
 
 		add_action('woocommerce_loaded', array($this, 'init_plugin'));
 		add_action('admin_notices', array($this, 'wc_missing_notice'));
-		add_filter('site_transient_update_plugins', array($this, 'remove_update_notification'));
-		add_action('plugins_loaded', array($this, 'update_check'));
 
 		// =========================================================================
 		// LICENCEBOT AUTO-CONNECT HOOKS
@@ -290,12 +288,6 @@ class AC_Serial_Numbers
 		// LicenceBot connection notices (handled separately to avoid conflicts)
 		// We'll use a priority of 15 to run after wc_missing_notice
 		add_action('admin_notices', array($this, 'admin_notices'), 15);
-	}
-
-	public function remove_update_notification($value)
-	{
-		unset($value->response[plugin_basename(__FILE__)]);
-		return $value;
 	}
 
 	/**
@@ -966,6 +958,7 @@ class AC_Serial_Numbers
 			require_once dirname(__FILE__) . '/includes/admin/class-ac-serial-numbers-admin.php';
 		}
 
+		require_once dirname(__FILE__) . '/includes/class-ac-serial-numbers-updater.php';
 		require_once dirname(__FILE__) . '/includes/ac-serial-numbers-helper-features.php';
 		require_once dirname(__FILE__) . '/includes/ac-serial-numbers-chat-widget.php';
 		do_action('ac_serial_numbers__loaded');
@@ -1101,21 +1094,6 @@ class AC_Serial_Numbers
 	public function on_plugins_loaded()
 	{
 		do_action('ac_serial_numbers__loaded');
-	}
-
-	public function update_check()
-	{
-		require_once 'vendor/plugin-update-checker/plugin-update-checker.php';
-		$update_url = 'https://yiczembsfiqqviqxxdxl.supabase.co/functions/v1/plugin-update-check';
-		$checker = PucFactory::buildUpdateChecker(
-			$update_url,
-			__FILE__,
-			'ac-serial-numbers'
-		);
-		$checker->addQueryArgFilter(function ($query) {
-			$query['plugin_slug'] = 'ac-serial-numbers';
-			return $query;
-		});
 	}
 }
 

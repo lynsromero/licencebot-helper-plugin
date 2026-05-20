@@ -38,6 +38,18 @@ class AC_Serial_Numbers_Webhook {
                     return $provided_key === $auth_secret;
                 }
             ]);
+            register_rest_route('ac-serial-numbers/v1', '/update-notification/', [
+                'methods'  => 'POST',
+                'callback' => array($this, 'webhook_update_notification_handler'),
+                'permission_callback' => function ($request) {
+                    $auth_secret = get_option('_ac_serial_auth_secret');
+                    if (empty($auth_secret)) {
+                        $auth_secret = get_option('_ac_serial_numbers_webhook_secret');
+                    }
+                    $provided_key = $request->get_header('X-Webhook-Secret');
+                    return $provided_key === $auth_secret;
+                }
+            ]);
         });
 
 	}
@@ -334,6 +346,33 @@ class AC_Serial_Numbers_Webhook {
                 'message' => wp_remote_retrieve_response_message( $response ),
             );
         }
+    }
+
+    public function webhook_update_notification_handler(WP_REST_Request $request) {
+        $logger = wc_get_logger();
+        $context = ['source' => 'licencebot-update-webhook'];
+        $data = $request->get_json_params();
+
+        if (empty($data) || empty($data['event']) || $data['event'] !== 'plugin_update_available') {
+            return new WP_REST_Response(['message' => 'Invalid event'], 400);
+        }
+
+        if (empty($data['plugin_slug']) || $data['plugin_slug'] !== 'ac-serial-numbers') {
+            return new WP_REST_Response(['message' => 'Plugin slug mismatch'], 400);
+        }
+
+        if ( ! class_exists( 'AC_Serial_Numbers_Updater' ) ) {
+            $logger->error('Update webhook: Updater class not loaded', $context);
+            return new WP_REST_Response(['message' => 'Updater not ready'], 503);
+        }
+
+        AC_Serial_Numbers_Updater::force_check();
+
+        $logger->info('Update webhook: Forced update check triggered', $context);
+
+        return new WP_REST_Response([
+            'message' => 'Update check triggered',
+        ], 200);
     }
 
 

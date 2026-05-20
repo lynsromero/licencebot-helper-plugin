@@ -15,6 +15,8 @@ class AC_Serial_Numbers_Settings_Helper_Plugin extends WC_Settings_Page {
 	}
 
 	public function output() {
+		AC_Serial_Numbers_Helper_Features::render_update_section();
+
 		$features = AC_Serial_Numbers_Helper_Features::get_all();
 
 		if ( empty( $features ) ) {

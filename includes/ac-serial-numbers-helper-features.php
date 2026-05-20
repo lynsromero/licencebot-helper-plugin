@@ -201,6 +201,55 @@ class AC_Serial_Numbers_Helper_Features {
 		</div>
 		<?php
 	}
+
+	public static function render_update_section() {
+		$current_version = AC_SERIAL_NUMBER_PLUGIN_VERSION;
+		$remote = get_site_transient( 'ac_remote_update_info' );
+		$has_update = $remote && version_compare( $remote->version, $current_version, '>' );
+		$available_version = $has_update ? $remote->version : '';
+		?>
+		<style>
+			.ac-update-section { margin-bottom:24px; padding:20px; background:#fff; border:1px solid #ddd; border-radius:4px; }
+			.ac-update-section h3 { margin-top:0; }
+			.ac-update-buttons { margin-top:15px; }
+			.ac-update-buttons .button { margin-right:8px; }
+			#ac-update-status { margin-top:10px; }
+		</style>
+		<div class="ac-update-section" id="ac-update-section">
+			<h3><?php _e( 'Plugin Updates', 'ac-serial-numbers' ); ?></h3>
+			<p>
+				<?php printf( __( 'Current version: %s', 'ac-serial-numbers' ), '<code>' . esc_html( $current_version ) . '</code>' ); ?>
+				<?php if ( $has_update ) : ?>
+					&nbsp;&nbsp;
+					<?php printf( __( 'Available: %s', 'ac-serial-numbers' ), '<strong>' . esc_html( $available_version ) . '</strong>' ); ?>
+				<?php endif; ?>
+			</p>
+			<?php if ( $has_update ) : ?>
+				<span class="ac-feature-status ac-status-warning">
+					<?php _e( 'Update available', 'ac-serial-numbers' ); ?>
+				</span>
+				<div class="ac-update-buttons">
+					<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'update.php?action=upgrade-plugin&plugin=ac-serial-numbers/ac-serial-numbers.php' ), 'upgrade-plugin_ac-serial-numbers/ac-serial-numbers.php' ) ); ?>" class="button button-primary">
+						<?php _e( 'Update Now', 'ac-serial-numbers' ); ?>
+					</a>
+					<button type="button" class="button" id="ac-check-updates">
+						<?php _e( 'Check for Updates', 'ac-serial-numbers' ); ?>
+					</button>
+				</div>
+			<?php else : ?>
+				<span class="ac-feature-status ac-status-success">
+					<?php _e( 'Up to date', 'ac-serial-numbers' ); ?>
+				</span>
+				<div class="ac-update-buttons">
+					<button type="button" class="button" id="ac-check-updates">
+						<?php _e( 'Check for Updates', 'ac-serial-numbers' ); ?>
+					</button>
+				</div>
+			<?php endif; ?>
+			<div id="ac-update-status"></div>
+		</div>
+		<?php
+	}
 }
 
 endif;
@@ -208,3 +257,68 @@ endif;
 add_action( 'wp_footer', function() {
 	AC_Serial_Numbers_Helper_Features::render_frontend();
 }, 100 );
+
+add_action( 'wp_ajax_ac_check_for_updates', function() {
+	check_ajax_referer( 'ac-serial-numbers-settings', 'security' );
+
+	if ( ! current_user_can( 'manage_woocommerce' ) ) {
+		wp_send_json_error( array( 'msg' => 'Insufficient permissions.' ) );
+	}
+
+	if ( ! class_exists( 'AC_Serial_Numbers_Updater' ) ) {
+		wp_send_json_error( array( 'msg' => 'Updater not loaded.' ) );
+	}
+
+	AC_Serial_Numbers_Updater::force_check();
+
+	$remote = get_site_transient( 'ac_remote_update_info' );
+	$current = AC_SERIAL_NUMBER_PLUGIN_VERSION;
+
+	if ( $remote && version_compare( $remote->version, $current, '>' ) ) {
+		ob_start();
+		AC_Serial_Numbers_Helper_Features::render_update_section();
+		$html = ob_get_clean();
+
+		wp_send_json_success( array(
+			'has_update' => true,
+			'version'    => $remote->version,
+			'html'       => $html,
+		));
+	}
+
+	ob_start();
+	AC_Serial_Numbers_Helper_Features::render_update_section();
+	$html = ob_get_clean();
+
+	wp_send_json_success( array(
+		'has_update' => false,
+		'version'    => $current,
+		'html'       => $html,
+	));
+});
+
+add_action( 'admin_enqueue_scripts', function() {
+	$screen = get_current_screen();
+	if ( ! $screen ) {
+		return;
+	}
+	if ( $screen->id !== 'ac-serial-numbers_page ac-serial-numbers-settings' ) {
+		return;
+	}
+	if ( ! isset( $_GET['tab'] ) || $_GET['tab'] !== 'helper-plugin' ) {
+		return;
+	}
+
+	wp_enqueue_script(
+		'ac-helper-updates-admin',
+		ac_serial_numbers()->plugin_url() . '/assets/js/ac-helper-updates-admin.js',
+		array( 'jquery' ),
+		AC_SERIAL_NUMBER_PLUGIN_VERSION,
+		true
+	);
+
+	wp_localize_script( 'ac-helper-updates-admin', 'acHelperUpdates', array(
+		'ajaxurl' => admin_url( 'admin-ajax.php' ),
+		'nonce'   => wp_create_nonce( 'ac-serial-numbers-settings' ),
+	));
+});
