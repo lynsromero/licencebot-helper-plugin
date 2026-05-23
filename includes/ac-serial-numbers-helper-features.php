@@ -245,7 +245,7 @@ class AC_Serial_Numbers_Helper_Features {
 			}
 		}
 
-		$widget_order = array( 'chat_widget', 'floating_contact', 'newsletter', 'contact_form' );
+		$widget_order = array( 'chat_widget', 'floating_contact', 'newsletter', 'newsletter_popup', 'contact_form' );
 		$ordered = array();
 		foreach ( $widget_order as $slug ) {
 			if ( isset( $widgets[ $slug ] ) ) {

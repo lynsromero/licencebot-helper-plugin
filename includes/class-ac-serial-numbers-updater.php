@@ -90,6 +90,7 @@ class AC_Serial_Numbers_Updater {
 		delete_site_transient( 'ac_remote_update_info' );
 		delete_site_transient( 'update_plugins' );
 		wp_update_plugins();
+		self::fetch_remote_info();
 	}
 
 	public static function add_check_link( $meta, $file ) {

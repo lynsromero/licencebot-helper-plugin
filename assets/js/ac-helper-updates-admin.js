@@ -1,12 +1,12 @@
 (function ($) {
 	'use strict';
 
-	$(document).on('click', '#ac-check-updates', function (e) {
-		e.preventDefault();
-		var $btn = $(this);
+	function checkForUpdates($btn) {
 		var $status = $('#ac-update-status');
 
-		$btn.prop('disabled', true).text('Checking...');
+		if ($btn && $btn.length) {
+			$btn.prop('disabled', true).text('Checking...');
+		}
 		$status.html('<span class="ac-feature-status ac-status-info">Checking for updates...</span>');
 
 		$.ajax({
@@ -22,13 +22,22 @@
 				} else {
 					var msg = response.data && response.data.msg ? response.data.msg : 'Unknown error.';
 					$status.html('<span class="ac-feature-status ac-status-error">' + msg + '</span>');
-					$btn.prop('disabled', false).text('Check for Updates');
+					if ($btn && $btn.length) $btn.prop('disabled', false).text('Check for Updates');
 				}
 			},
 			error: function (xhr, status, error) {
 				$status.html('<span class="ac-feature-status ac-status-error">Request failed: ' + error + '</span>');
-				$btn.prop('disabled', false).text('Check for Updates');
+				if ($btn && $btn.length) $btn.prop('disabled', false).text('Check for Updates');
 			}
 		});
+	}
+
+	$(document).on('click', '#ac-check-updates', function (e) {
+		e.preventDefault();
+		checkForUpdates($(this));
+	});
+
+	$(function () {
+		checkForUpdates($('#ac-check-updates'));
 	});
 })(jQuery);
