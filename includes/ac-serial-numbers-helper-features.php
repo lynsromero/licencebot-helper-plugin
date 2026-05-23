@@ -224,6 +224,15 @@ class AC_Serial_Numbers_Helper_Features {
 			}
 		}
 
+		$widget_order = array( 'chat_widget', 'floating_contact', 'newsletter', 'contact_form' );
+		$ordered = array();
+		foreach ( $widget_order as $slug ) {
+			if ( isset( $widgets[ $slug ] ) ) {
+				$ordered[ $slug ] = $widgets[ $slug ];
+			}
+		}
+		$widgets = $ordered;
+
 		if ( ! empty( $widgets ) ) {
 			echo '<div class="ac-feature-subsection"><h4>' . __( 'Storefront Widgets', 'ac-serial-numbers' ) . '</h4>';
 			foreach ( $widgets as $slug => $config ) {
