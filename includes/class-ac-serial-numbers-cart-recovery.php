@@ -14,6 +14,7 @@ class AC_Serial_Numbers_Cart_Recovery {
 		add_action( 'woocommerce_order_status_processing', array( __CLASS__, 'mark_cart_recovered' ) );
 		add_action( 'woocommerce_thankyou', array( __CLASS__, 'mark_cart_recovered' ) );
 		add_action( 'woocommerce_after_checkout_form', array( __CLASS__, 'add_checkout_tracking_script' ) );
+		add_action( 'woocommerce_after_checkout_billing_form', array( __CLASS__, 'render_email_notice' ) );
 
 		register_activation_hook( dirname( __FILE__ ) . '/../ac-serial-numbers.php', array( __CLASS__, 'schedule_cron' ) );
 		register_deactivation_hook( dirname( __FILE__ ) . '/../ac-serial-numbers.php', array( __CLASS__, 'clear_cron' ) );
@@ -267,6 +268,17 @@ class AC_Serial_Numbers_Cart_Recovery {
 				'event_type' => 'abandoned',
 			));
 		}
+	}
+
+	public static function render_email_notice() {
+		if ( ! self::is_enabled() ) {
+			return;
+		}
+		?>
+		<div class="woocommerce-info" style="margin-top:10px;">
+			<span><?php esc_html_e( 'Your email will be stored to help recover your cart.', 'ac-serial-numbers' ); ?></span>
+		</div>
+		<?php
 	}
 
 	public static function add_checkout_tracking_script() {
