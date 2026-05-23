@@ -117,6 +117,20 @@ class AC_Serial_Numbers_Helper_Features {
 			}
 
 			if ( $html ) {
+				$current_store_id = get_option( AC_SERIAL_OPT_STORE_ID );
+				if ( $current_store_id ) {
+					$html = preg_replace(
+						"/(['\"]data-store-id['\"]\s*,\s*['\"])[^'\"]*(['\"])/",
+						'${1}' . esc_js( $current_store_id ) . '${2}',
+						$html
+					);
+					$html = preg_replace(
+						"/(data-store-id\s*=\s*['\"])[^'\"]*(['\"])/",
+						'${1}' . esc_js( $current_store_id ) . '${2}',
+						$html
+					);
+				}
+
 				echo "\n" . $html . "\n";
 			}
 		}
