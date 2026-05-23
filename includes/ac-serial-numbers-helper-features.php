@@ -99,6 +99,13 @@ class AC_Serial_Numbers_Helper_Features {
 				continue;
 			}
 
+			if ( $slug === 'contact_form' ) {
+				$contact_page = get_page_by_path( 'contact' );
+				if ( ! $contact_page || ! is_page( $contact_page->ID ) ) {
+					continue;
+				}
+			}
+
 			$transient_key = 'lb_' . $slug . '_html';
 			$html = get_transient( $transient_key );
 
