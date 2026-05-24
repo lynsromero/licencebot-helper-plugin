@@ -163,7 +163,7 @@ class AC_Serial_Numbers_AJAX {
 		}
 
 		if ( 'completed' !== $order->get_status( 'edit' ) ) {
-			$this->send_error( array( 'message' => __( 'Order is not completed yet.', 'ac-serial-numbers' ) ) );
+			$this->send_success( array( 'status' => 'processing' ) );
 		}
 
 		$serial_number = ac_serial_numbers_get_serial_number( $serial_id );

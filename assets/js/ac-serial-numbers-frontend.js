@@ -24,7 +24,23 @@
                 nonce: nonce
             },
             success: function (res) {
-                $btn.replaceWith('<code>' + res.key + '</code>');
+                if (res.status === 'processing') {
+                    $btn.replaceWith(
+                        '<p style="margin:0 0 8px 0;"><em>Order Is Processing.</em></p>' +
+                        '<button class="ac-sn-see-license button" ' +
+                        'data-serial-id="' + serialId + '" ' +
+                        'data-order-id="' + orderId + '" ' +
+                        'data-product-id="' + productId + '" ' +
+                        'data-product-title="' + productTitle + '" ' +
+                        'data-order-key="' + orderKey + '" ' +
+                        'data-nonce="' + nonce + '">' +
+                        'Check Again</button>'
+                    );
+                    return;
+                }
+                if (res.key) {
+                    $btn.replaceWith('<code>' + res.key + '</code>');
+                }
             },
             error: function (res) {
                 $btn.prop('disabled', false).text('See Your License Key');

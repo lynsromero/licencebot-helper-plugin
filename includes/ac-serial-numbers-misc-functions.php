@@ -103,9 +103,6 @@ function ac_serial_numbers_get_low_stock_products( $force = false, $stock = 10 )
  */
 function ac_serial_numbers_get_order_table( $order, $return = false ) {
 	$order_id = $order->get_id();
-	if ( 'completed' !== $order->get_status( 'edit' ) ) {
-		return;
-	}
 
 	//no serial numbers ordered so bail @since 1.2.1
 	$total_ordered_serial_numbers = ac_serial_numbers_order_has_serial_numbers( $order );
