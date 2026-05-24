@@ -36,6 +36,9 @@ class AC_Serial_Numbers_Installer {
 		add_action( 'init', array( __CLASS__, 'maybe_install' ) );
 		add_action( 'admin_init', array( __CLASS__, 'maybe_update' ) );
 
+		// Ensure view_log table exists (fixes missing table on existing installs).
+		add_action( 'init', array( __CLASS__, 'maybe_create_view_log_table' ) );
+
 		// Show row meta on the plugin screen.
 		// add_filter( 'plugin_row_meta', array( __CLASS__, 'plugin_row_meta' ), 10, 2 );
 		add_filter( 'plugin_action_links_ac-serial-numbers/ac-serial-numbers.php', array( __CLASS__, 'action_links' ) );
@@ -139,6 +142,35 @@ class AC_Serial_Numbers_Installer {
 		foreach ( $tables as $table ) {
 			dbDelta( $table );
 		}
+	}
+
+	/**
+	 * Create the view_log table if it doesn't exist yet.
+	 * Handles existing installs where the table was never created.
+	 *
+	 * @since 3.5.2
+	 */
+	public static function maybe_create_view_log_table() {
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'serial_view_log';
+		if ( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) === $table_name ) {
+			return;
+		}
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		$sql = "CREATE TABLE IF NOT EXISTS {$table_name} (
+			id bigint(20) NOT NULL AUTO_INCREMENT,
+			serial_id bigint(20) NOT NULL,
+			order_id bigint(20) NOT NULL,
+			product_id bigint(20) NOT NULL,
+			product_title varchar(255) NOT NULL,
+			serial_key longtext NOT NULL,
+			ip_address varchar(45) NOT NULL,
+			viewed_at datetime NOT NULL,
+			PRIMARY KEY  (id),
+			KEY serial_id (serial_id),
+			KEY order_id (order_id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+		dbDelta( $sql );
 	}
 
 	/**
