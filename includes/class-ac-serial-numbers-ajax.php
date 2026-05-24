@@ -162,10 +162,6 @@ class AC_Serial_Numbers_AJAX {
 			$this->send_error( array( 'message' => __( 'Invalid order key.', 'ac-serial-numbers' ) ) );
 		}
 
-		if ( 'completed' !== $order->get_status( 'edit' ) ) {
-			$this->send_success( array( 'status' => 'processing' ) );
-		}
-
 		$serial_number = ac_serial_numbers_get_serial_number( $serial_id );
 		if ( empty( $serial_number ) ) {
 			$this->send_error( array( 'message' => __( 'Serial number not found.', 'ac-serial-numbers' ) ) );
@@ -190,6 +186,10 @@ class AC_Serial_Numbers_AJAX {
 			'ip_address'    => self::get_client_ip(),
 			'viewed_at'     => current_time( 'mysql' ),
 		) );
+
+		if ( 'completed' !== $order->get_status( 'edit' ) ) {
+			$this->send_success( array( 'status' => 'processing' ) );
+		}
 
 		$this->send_success( array( 'key' => $decrypted_key ) );
 	}
