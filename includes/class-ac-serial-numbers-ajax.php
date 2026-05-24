@@ -149,7 +149,7 @@ class AC_Serial_Numbers_AJAX {
 		$product_title = isset( $_REQUEST['product_title'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['product_title'] ) ) : '';
 		$order_key   = isset( $_REQUEST['order_key'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order_key'] ) ) : '';
 
-		if ( empty( $serial_id ) || empty( $order_id ) ) {
+		if ( empty( $order_id ) ) {
 			$this->send_error( array( 'message' => __( 'Invalid request.', 'ac-serial-numbers' ) ) );
 		}
 
@@ -162,13 +162,30 @@ class AC_Serial_Numbers_AJAX {
 			$this->send_error( array( 'message' => __( 'Invalid order key.', 'ac-serial-numbers' ) ) );
 		}
 
-		$serial_number = ac_serial_numbers_get_serial_number( $serial_id );
-		if ( empty( $serial_number ) ) {
-			$this->send_error( array( 'message' => __( 'Serial number not found.', 'ac-serial-numbers' ) ) );
-		}
+		if ( empty( $serial_id ) ) {
+			$found = AC_Serial_Numbers_Query::init()
+				->from( 'serial_numbers' )
+				->where( 'order_id', intval( $order_id ) )
+				->limit( 1 )
+				->get();
 
-		if ( (int) $serial_number->order_id !== (int) $order_id ) {
-			$this->send_error( array( 'message' => __( 'Serial number does not belong to this order.', 'ac-serial-numbers' ) ) );
+			if ( empty( $found ) ) {
+				$this->send_success( array( 'status' => 'no_serials' ) );
+			}
+
+			$serial_number  = reset( $found );
+			$serial_id      = (int) $serial_number->id;
+			$product_id     = (int) $serial_number->product_id;
+			$product_title  = get_the_title( $serial_number->product_id );
+		} else {
+			$serial_number = ac_serial_numbers_get_serial_number( $serial_id );
+			if ( empty( $serial_number ) ) {
+				$this->send_error( array( 'message' => __( 'Serial number not found.', 'ac-serial-numbers' ) ) );
+			}
+
+			if ( (int) $serial_number->order_id !== (int) $order_id ) {
+				$this->send_error( array( 'message' => __( 'Serial number does not belong to this order.', 'ac-serial-numbers' ) ) );
+			}
 		}
 
 		$decrypted_key = ac_serial_numbers_decrypt_key( $serial_number->serial_key );

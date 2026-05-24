@@ -115,7 +115,29 @@ function ac_serial_numbers_get_order_table( $order, $return = false ) {
 
 	echo sprintf( '<h2 class="woocommerce-order-downloads__title">%s</h2>', apply_filters( 'ac_serial_numbers_order_table_heading', esc_html__( "Serial Numbers", 'ac-serial-numbers' ) ) );
 	if ( empty( $serial_numbers ) ) {
-		echo sprintf( '<p>%s</p>', apply_filters( 'ac_serial_numbers_pending_notice', __( 'Order waiting for assigning serial numbers.', 'ac-serial-numbers' ) ) );
+		$order_key = $order->get_order_key();
+		$nonce     = wp_create_nonce( 'ac_serial_numbers_view_license' );
+
+		$first_product_id    = 0;
+		$first_product_title = '';
+		foreach ( $order->get_items() as $item ) {
+			$pid = $item->get_variation_id() ? $item->get_variation_id() : $item->get_product_id();
+			if ( ac_serial_numbers_product_serial_enabled( $pid ) ) {
+				$first_product_id    = $pid;
+				$first_product_title = get_the_title( $pid );
+				break;
+			}
+		}
+
+		printf(
+			'<button class="ac-sn-see-license button" data-serial-id="0" data-order-id="%d" data-product-id="%d" data-product-title="%s" data-order-key="%s" data-nonce="%s">%s</button>',
+			intval( $order_id ),
+			intval( $first_product_id ),
+			esc_attr( $first_product_title ),
+			esc_attr( $order_key ),
+			esc_attr( $nonce ),
+			esc_html__( 'Check Your License Key', 'ac-serial-numbers' )
+		);
 
 		return;
 	}
