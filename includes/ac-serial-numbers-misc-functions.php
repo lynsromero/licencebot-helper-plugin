@@ -124,7 +124,9 @@ function ac_serial_numbers_get_order_table( $order, $return = false ) {
 	}
 
 	ob_start();
-	$columns = ac_serial_numbers_get_order_table_columns();
+	$columns  = ac_serial_numbers_get_order_table_columns();
+	$order_key = $order->get_order_key();
+	$nonce     = wp_create_nonce( 'ac_serial_numbers_view_license' );
 	?>
 	<table
 		class="woocommerce-table woocommerce-table--order-details shop_table order_details ac-serial-numbers-order-items"
@@ -148,7 +150,19 @@ function ac_serial_numbers_get_order_table( $order, $return = false ) {
 						echo sprintf( '<a href="%s">%s</a>', esc_url( get_permalink( $serial_number->product_id ) ), get_the_title( $serial_number->product_id ) );
 						break;
 					case 'serial_key':
-						echo ac_serial_numbers_decrypt_key( $serial_number->serial_key );
+						$btn_serial_id   = absint( $serial_number->id );
+						$btn_product_id  = absint( $serial_number->product_id );
+						$btn_product_title = esc_attr( get_the_title( $serial_number->product_id ) );
+						printf(
+							'<button class="ac-sn-see-license button" data-serial-id="%d" data-order-id="%d" data-product-id="%d" data-product-title="%s" data-order-key="%s" data-nonce="%s">%s</button>',
+							$btn_serial_id,
+							$order_id,
+							$btn_product_id,
+							$btn_product_title,
+							esc_attr( $order_key ),
+							esc_attr( $nonce ),
+							esc_html__( 'See Your License Key', 'ac-serial-numbers' )
+						);
 						break;
 					case 'activation_email':
 						echo $order->get_billing_email();

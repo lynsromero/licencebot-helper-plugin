@@ -278,6 +278,9 @@ class AC_Serial_Numbers
 		// Enqueue LicenceBot helper script on frontend pages
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_licencebot_helper'));
 
+		// Enqueue frontend script for "See Your License Key" button
+		add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_scripts'));
+
 		// Handle admin actions (re-connect, disconnect, setup token)
 		add_action('admin_init', array($this, 'handle_admin_actions'));
 
@@ -728,6 +731,28 @@ class AC_Serial_Numbers
 	}
 
 	/**
+	 * Enqueue frontend script for "See Your License Key" button.
+	 * Only loads on order-received and view-order pages.
+	 *
+	 * @since 3.5.2
+	 */
+	public function enqueue_frontend_scripts() {
+		if ( ! is_order_received_page() && ! is_view_order_page() ) {
+			return;
+		}
+
+		$js_url = $this->plugin_url() . '/assets/js';
+
+		wp_enqueue_script(
+			'ac-serial-numbers-frontend',
+			$js_url . '/ac-serial-numbers-frontend.js',
+			array( 'jquery', 'wp-util' ),
+			$this->version,
+			true
+		);
+	}
+
+	/**
 	 * =========================================================================
 	 * LICENCEBOT ADMIN ACTIONS & NOTICES
 	 * =========================================================================
@@ -948,6 +973,7 @@ class AC_Serial_Numbers
 		require_once dirname(__FILE__) . '/includes/class-ac-serial-numbers-encryption.php';
 		require_once dirname(__FILE__) . '/includes/class-ac-serial-numbers-ajax.php';
 		// require_once dirname( __FILE__ ) . '/includes/class-ac-serial-numbers-api.php';
+		require_once dirname(__FILE__) . '/includes/class-ac-serial-numbers-view-log.php';
 		require_once dirname(__FILE__) . '/includes/class-ac-serial-numbers-cron.php';
 		// require_once dirname( __FILE__ ) . '/includes/class-ac-serial-numbers-compat.php';
 		require_once dirname(__FILE__) . '/includes/class-ac-serial-numbers-webhook.php';

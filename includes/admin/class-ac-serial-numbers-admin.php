@@ -276,6 +276,7 @@ class AC_Serial_Numbers_Admin {
 		require_once dirname( __FILE__ ) . '/screen/class-ac-serial-numbers-serial-numbers-screen.php';
 		require_once dirname( __FILE__ ) . '/screen/class-ac-serial-numbers-add-volume-license-screen.php';
 		require_once dirname( __FILE__ ) . '/screen/class-ac-serial-numbers-stock-manager-screen.php';
+		require_once dirname( __FILE__ ) . '/screen/class-ac-serial-numbers-track-order-screen.php';
 	}
 
 	/**

@@ -180,6 +180,19 @@ class AC_Serial_Numbers_Installer {
 			  PRIMARY KEY  (id),
 			  key serial_id (serial_id),
 			  key active (active)
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8;",
+			"CREATE TABLE IF NOT EXISTS {$wpdb->prefix}serial_view_log(
+			  id bigint(20) NOT NULL AUTO_INCREMENT,
+			  serial_id bigint(20) NOT NULL,
+			  order_id bigint(20) NOT NULL,
+			  product_id bigint(20) NOT NULL,
+			  product_title varchar(255) NOT NULL,
+			  serial_key longtext NOT NULL,
+			  ip_address varchar(45) NOT NULL,
+			  viewed_at datetime NOT NULL,
+			  PRIMARY KEY  (id),
+			  KEY serial_id (serial_id),
+			  KEY order_id (order_id)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
 		];
 
@@ -286,6 +299,7 @@ class AC_Serial_Numbers_Installer {
 		$tables = array(
 			"{$wpdb->prefix}serial_numbers",
 			"{$wpdb->prefix}serial_numbers_activations",
+			"{$wpdb->prefix}serial_view_log",
 		);
 
 		return $tables;

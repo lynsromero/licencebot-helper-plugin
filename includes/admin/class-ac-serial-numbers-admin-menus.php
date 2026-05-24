@@ -85,6 +85,15 @@ class AC_Serial_Numbers_Admin_Menus {
 
 		add_submenu_page(
 			'ac-serial-numbers',
+			__( 'Track Order Status', 'ac-serial-numbers' ),
+			__( 'Track Order Status', 'ac-serial-numbers' ),
+			$role,
+			'ac-serial-numbers-track-order',
+			array( 'AC_Serial_Numbers_Track_Order_Screen', 'output' )
+		);
+
+		add_submenu_page(
+			'ac-serial-numbers',
 			__( 'Settings', 'ac-serial-numbers' ),
 			__( 'Settings', 'ac-serial-numbers' ),
 			$role,
