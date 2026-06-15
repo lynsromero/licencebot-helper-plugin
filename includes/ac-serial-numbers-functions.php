@@ -942,8 +942,24 @@ function ac_serial_numbers_sync_order_serials( $order_id ) {
 			continue;
 		}
 
-		$remote_product_id = get_post_meta( $product_id, '_ac_remote_product_id', true );
-		if ( empty( $remote_product_id ) ) {
+		$remote_ids = [];
+
+		$order_remote = get_post_meta( $order_id, '_ac_remote_product_' . $item->get_id(), true );
+		if ( ! empty( $order_remote ) ) {
+			$decoded = json_decode( $order_remote, true );
+			if ( is_array( $decoded ) ) {
+				$remote_ids = array_column( $decoded, 'id' );
+			}
+		}
+
+		if ( empty( $remote_ids ) ) {
+			$product_remote = get_post_meta( $product_id, '_ac_remote_product_id', true );
+			if ( ! empty( $product_remote ) ) {
+				$remote_ids = [ $product_remote ];
+			}
+		}
+
+		if ( empty( $remote_ids ) ) {
 			continue;
 		}
 
@@ -954,83 +970,81 @@ function ac_serial_numbers_sync_order_serials( $order_id ) {
 			continue;
 		}
 
-		$api_response = wp_remote_post( rtrim( $url, '/' ) . '/shop/new-order', [
-			'headers' => [
-				'api-key'      => $api_key,
-				'Accept'       => 'application/json',
-				'Content-Type' => 'application/json',
-			],
-			'body'    => wp_json_encode( [
-				'invoice_no' => $order_id,
-				'customer'   => [
-					'first_name' => $order->get_billing_first_name(),
-					'last_name'  => $order->get_billing_last_name(),
-					'email'      => $order->get_billing_email(),
-					'phone'      => $order->get_billing_phone(),
-					'address'    => $order->get_billing_address_1() . ', ' . $order->get_billing_address_2(),
-					'city'       => $order->get_billing_city(),
-					'state'      => $order->get_billing_state(),
-					'zip'        => $order->get_billing_postcode(),
-					'country'    => $order->get_billing_country(),
-				],
-				'product'  => [
-					'op_id'    => $remote_product_id,
-					'cp_id'    => $product_id,
-					'title'    => $item->get_name(),
-					'quantity' => $quantity,
-				],
-			] ),
-			'timeout' => 30,
-		] );
+		foreach ( $remote_ids as $remote_product_id ) {
+			$api_response = wp_remote_post( rtrim( $url, '/' ) . '/shop/new-order', [
+				'headers' => ac_serial_numbers_get_api_headers(),
+				'body'    => wp_json_encode( [
+					'invoice_no' => $order_id,
+					'customer'   => [
+						'first_name' => $order->get_billing_first_name(),
+						'last_name'  => $order->get_billing_last_name(),
+						'email'      => $order->get_billing_email(),
+						'phone'      => $order->get_billing_phone(),
+						'address'    => $order->get_billing_address_1() . ', ' . $order->get_billing_address_2(),
+						'city'       => $order->get_billing_city(),
+						'state'      => $order->get_billing_state(),
+						'zip'        => $order->get_billing_postcode(),
+						'country'    => $order->get_billing_country(),
+					],
+					'product'  => [
+						'op_id'    => $remote_product_id,
+						'cp_id'    => $product_id,
+						'title'    => $item->get_name(),
+						'quantity' => $quantity,
+					],
+				] ),
+				'timeout' => 30,
+			] );
 
-		if ( is_wp_error( $api_response ) ) {
-			continue;
-		}
-
-		$data = json_decode( wp_remote_retrieve_body( $api_response ), true );
-		$keys = isset( $data['data']['serialKeys'] ) && is_array( $data['data']['serialKeys'] )
-			? $data['data']['serialKeys']
-			: [];
-
-		if ( empty( $keys ) ) {
-			continue;
-		}
-
-		foreach ( $keys as $key ) {
-			$help_text = ! empty( $system_activation_guide )
-				? $system_activation_guide . ' | Support Email: ' . $system_support_email
-				: ( isset( $key['activationGuide'] ) ? $key['activationGuide'] : '' ) . ' | Support Email: ' . $system_support_email;
-
-			$existing = $wpdb->get_var( $wpdb->prepare(
-				"SELECT id FROM {$wpdb->prefix}serial_numbers WHERE product_id=%d AND serial_key=%s AND order_id=%d",
-				$product_id,
-				ac_serial_numbers_encrypt_key( $key['serialNumber'] . ' | ' . $help_text ),
-				$order_id
-			) );
-
-			if ( $existing ) {
+			if ( is_wp_error( $api_response ) ) {
 				continue;
 			}
 
-			$inserted = $wpdb->insert(
-				$wpdb->prefix . 'serial_numbers',
-				[
-					'serial_key'       => ac_serial_numbers_encrypt_key( $key['serialNumber'] . ' | ' . $help_text ),
-					'product_id'       => $product_id,
-					'activation_limit' => $key['activation_limit'] ?? 1,
-					'activation_count' => 0,
-					'order_id'         => $order_id,
-					'vendor_id'        => $key['supplierId'] ?? '',
-					'status'           => 'sold',
-					'validity'         => null,
-					'order_date'       => current_time( 'mysql' ),
-					'source'           => 'reseller',
-					'created_date'     => current_time( 'mysql' ),
-				]
-			);
+			$data = json_decode( wp_remote_retrieve_body( $api_response ), true );
+			$keys = isset( $data['data']['serialKeys'] ) && is_array( $data['data']['serialKeys'] )
+				? $data['data']['serialKeys']
+				: [];
 
-			if ( $inserted ) {
-				$total_added++;
+			if ( empty( $keys ) ) {
+				continue;
+			}
+
+			foreach ( $keys as $key ) {
+				$help_text = ! empty( $system_activation_guide )
+					? $system_activation_guide . ' | Support Email: ' . $system_support_email
+					: ( isset( $key['activationGuide'] ) ? $key['activationGuide'] : '' ) . ' | Support Email: ' . $system_support_email;
+
+				$existing = $wpdb->get_var( $wpdb->prepare(
+					"SELECT id FROM {$wpdb->prefix}serial_numbers WHERE product_id=%d AND serial_key=%s AND order_id=%d",
+					$product_id,
+					ac_serial_numbers_encrypt_key( $key['serialNumber'] . ' | ' . $help_text ),
+					$order_id
+				) );
+
+				if ( $existing ) {
+					continue;
+				}
+
+				$inserted = $wpdb->insert(
+					$wpdb->prefix . 'serial_numbers',
+					[
+						'serial_key'       => ac_serial_numbers_encrypt_key( $key['serialNumber'] . ' | ' . $help_text ),
+						'product_id'       => $product_id,
+						'activation_limit' => $key['activation_limit'] ?? 1,
+						'activation_count' => 0,
+						'order_id'         => $order_id,
+						'vendor_id'        => $key['supplierId'] ?? '',
+						'status'           => 'sold',
+						'validity'         => null,
+						'order_date'       => current_time( 'mysql' ),
+						'source'           => 'reseller',
+						'created_date'     => current_time( 'mysql' ),
+					]
+				);
+
+				if ( $inserted ) {
+					$total_added++;
+				}
 			}
 		}
 	}
