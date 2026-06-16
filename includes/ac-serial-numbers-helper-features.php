@@ -100,12 +100,7 @@ class AC_Serial_Numbers_Helper_Features {
 			}
 
 			if ( $slug === 'contact_form' ) {
-				$page_slug = get_option( 'licencebot_contact_page_slug', 'contact' );
-				$page_slug = basename( untrailingslashit( $page_slug ) );
-				$contact_page = get_page_by_path( $page_slug );
-				if ( ! $contact_page || ! is_page( $contact_page->ID ) ) {
-					continue;
-				}
+				continue;
 			}
 
 			$transient_key = 'lb_' . $slug . '_html';
@@ -136,6 +131,63 @@ class AC_Serial_Numbers_Helper_Features {
 				echo "\n" . $html . "\n";
 			}
 		}
+	}
+
+	public static function inject_contact_form() {
+		if ( is_admin() ) {
+			return;
+		}
+
+		$feature = self::get( 'contact_form' );
+		if ( ! $feature ) {
+			return;
+		}
+
+		$enabled = get_option( $feature['enabled_option'], 'no' );
+		if ( $enabled !== 'yes' ) {
+			return;
+		}
+
+		$page_slug = get_option( 'licencebot_contact_page_slug', 'contact' );
+		$page_slug = basename( untrailingslashit( $page_slug ) );
+		$contact_page = get_page_by_path( $page_slug );
+		if ( ! $contact_page || ! is_page( $contact_page->ID ) ) {
+			return;
+		}
+
+		$transient_key = 'lb_contact_form_html';
+		$html = get_transient( $transient_key );
+		if ( $html === false ) {
+			$html = get_option( $feature['code_option'], '' );
+			if ( $html ) {
+				set_transient( $transient_key, $html, 5 * MINUTE_IN_SECONDS );
+			}
+		}
+
+		if ( ! $html ) {
+			return;
+		}
+
+		$current_store_id = get_option( AC_SERIAL_OPT_STORE_ID );
+		if ( $current_store_id ) {
+			$html = preg_replace(
+				"/(['\"]data-store-id['\"]\s*,\s*['\"])[^'\"]*(['\"])/",
+				'${1}' . esc_js( $current_store_id ) . '${2}',
+				$html
+			);
+			$html = preg_replace(
+				"/(data-store-id\s*=\s*['\"])[^'\"]*(['\"])/",
+				'${1}' . esc_js( $current_store_id ) . '${2}',
+				$html
+			);
+		}
+
+		add_filter( 'the_content', function( $content ) use ( $html ) {
+			if ( is_main_query() && in_the_loop() ) {
+				return $content . "\n" . $html . "\n";
+			}
+			return $content;
+		}, 20 );
 	}
 
 	public static function render_card( $slug ) {
@@ -297,6 +349,10 @@ class AC_Serial_Numbers_Helper_Features {
 }
 
 endif;
+
+add_action( 'wp', function() {
+	AC_Serial_Numbers_Helper_Features::inject_contact_form();
+} );
 
 add_action( 'wp_footer', function() {
 	AC_Serial_Numbers_Helper_Features::render_frontend();
