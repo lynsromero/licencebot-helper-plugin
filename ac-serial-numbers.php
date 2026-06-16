@@ -3,7 +3,7 @@
  * Plugin Name: LicenceBot Helper Plugin
  * Plugin URI:  https://licencebot.com
  * Description: Auto-connects your store with LicenceBot for chat, cart recovery, serial number delivery, and more.
- * Version:     3.6.2
+ * Version:     3.6.3
  * Author:      Tic Limited
  * Author URI:  https://tic.com.bd
  * License:     GPLv2+
@@ -84,7 +84,7 @@ class AC_Serial_Numbers
 	 * @var string
 	 * @since 1.0.0
 	 */
-	public $version = '3.6.2';
+	public $version = '3.6.3';
 
 	/**
 	 * This plugin's instance
@@ -982,6 +982,7 @@ class AC_Serial_Numbers
 
 		if (is_admin()) {
 			require_once dirname(__FILE__) . '/includes/admin/class-ac-serial-numbers-admin.php';
+			require_once dirname(__FILE__) . '/includes/admin/settings/ac-serial-numbers-settings-shortcodes.php';
 		}
 
 		require_once dirname(__FILE__) . '/includes/class-ac-serial-numbers-updater.php';

@@ -32,13 +32,6 @@ class AC_Serial_Numbers_Settings_Helper_Plugin extends WC_Settings_Page {
 			$enabled = isset( $_POST[ $config['enabled_option'] ] );
 			update_option( $config['enabled_option'], $enabled ? 'yes' : 'no' );
 
-			if ( $slug === 'contact_form' ) {
-				$page_slug = isset( $_POST['licencebot_contact_page_slug'] )
-					? sanitize_text_field( wp_unslash( $_POST['licencebot_contact_page_slug'] ) )
-					: 'contact';
-				update_option( 'licencebot_contact_page_slug', $page_slug );
-			}
-
 			if ( $enabled ) {
 				$result = AC_Serial_Numbers_Helper_Features::fetch_code( $slug );
 				if ( is_wp_error( $result ) ) {

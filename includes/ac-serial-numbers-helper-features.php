@@ -133,63 +133,6 @@ class AC_Serial_Numbers_Helper_Features {
 		}
 	}
 
-	public static function inject_contact_form() {
-		if ( is_admin() ) {
-			return;
-		}
-
-		$feature = self::get( 'contact_form' );
-		if ( ! $feature ) {
-			return;
-		}
-
-		$enabled = get_option( $feature['enabled_option'], 'no' );
-		if ( $enabled !== 'yes' ) {
-			return;
-		}
-
-		$page_slug = get_option( 'licencebot_contact_page_slug', 'contact' );
-		$page_slug = basename( untrailingslashit( $page_slug ) );
-		$contact_page = get_page_by_path( $page_slug );
-		if ( ! $contact_page || ! is_page( $contact_page->ID ) ) {
-			return;
-		}
-
-		$transient_key = 'lb_contact_form_html';
-		$html = get_transient( $transient_key );
-		if ( $html === false ) {
-			$html = get_option( $feature['code_option'], '' );
-			if ( $html ) {
-				set_transient( $transient_key, $html, 5 * MINUTE_IN_SECONDS );
-			}
-		}
-
-		if ( ! $html ) {
-			return;
-		}
-
-		$current_store_id = get_option( AC_SERIAL_OPT_STORE_ID );
-		if ( $current_store_id ) {
-			$html = preg_replace(
-				"/(['\"]data-store-id['\"]\s*,\s*['\"])[^'\"]*(['\"])/",
-				'${1}' . esc_js( $current_store_id ) . '${2}',
-				$html
-			);
-			$html = preg_replace(
-				"/(data-store-id\s*=\s*['\"])[^'\"]*(['\"])/",
-				'${1}' . esc_js( $current_store_id ) . '${2}',
-				$html
-			);
-		}
-
-		add_filter( 'the_content', function( $content ) use ( $html ) {
-			if ( is_main_query() && in_the_loop() ) {
-				return $content . "\n" . $html . "\n";
-			}
-			return $content;
-		}, 20 );
-	}
-
 	public static function render_card( $slug ) {
 		$feature = self::get( $slug );
 		if ( ! $feature ) {
@@ -270,21 +213,12 @@ class AC_Serial_Numbers_Helper_Features {
 				<?php if ( $slug === 'contact_form' ) : ?>
 				<tr>
 					<th scope="row">
-						<label for="licencebot_contact_page_slug">
-							<?php _e( 'Contact Page URL', 'ac-serial-numbers' ); ?>
-						</label>
+						<?php _e( 'Shortcode', 'ac-serial-numbers' ); ?>
 					</th>
 					<td>
-						<input
-							type="text"
-							id="licencebot_contact_page_slug"
-							name="licencebot_contact_page_slug"
-							value="<?php echo esc_attr( get_option( 'licencebot_contact_page_slug', 'contact' ) ); ?>"
-							placeholder="<?php esc_attr_e( 'contact-us or https://yoursite.com/contact-us/', 'ac-serial-numbers' ); ?>"
-							style="width:100%;max-width:400px;"
-						/>
+						<code>[licencebot_contact_form]</code>
 						<p class="description" style="margin-top:4px;">
-							<?php _e( 'Enter the full URL (e.g. https://yoursite.com/contact-us/) or just the slug (e.g. contact-us).', 'ac-serial-numbers' ); ?>
+							<?php _e( 'Add this shortcode to any page or post to display the contact form.', 'ac-serial-numbers' ); ?>
 						</p>
 					</td>
 				</tr>
@@ -350,13 +284,50 @@ class AC_Serial_Numbers_Helper_Features {
 
 endif;
 
-add_action( 'wp', function() {
-	AC_Serial_Numbers_Helper_Features::inject_contact_form();
-} );
-
 add_action( 'wp_footer', function() {
 	AC_Serial_Numbers_Helper_Features::render_frontend();
 }, 100 );
+
+add_shortcode( 'licencebot_contact_form', function( $atts ) {
+	$feature = AC_Serial_Numbers_Helper_Features::get( 'contact_form' );
+	if ( ! $feature ) {
+		return '';
+	}
+
+	$enabled = get_option( $feature['enabled_option'], 'no' );
+	if ( $enabled !== 'yes' ) {
+		return '';
+	}
+
+	$transient_key = 'lb_contact_form_html';
+	$html = get_transient( $transient_key );
+	if ( $html === false ) {
+		$html = get_option( $feature['code_option'], '' );
+		if ( $html ) {
+			set_transient( $transient_key, $html, 5 * MINUTE_IN_SECONDS );
+		}
+	}
+
+	if ( ! $html ) {
+		return '';
+	}
+
+	$current_store_id = get_option( AC_SERIAL_OPT_STORE_ID );
+	if ( $current_store_id ) {
+		$html = preg_replace(
+			"/(['\"]data-store-id['\"]\s*,\s*['\"])[^'\"]*(['\"])/",
+			'${1}' . esc_js( $current_store_id ) . '${2}',
+			$html
+		);
+		$html = preg_replace(
+			"/(data-store-id\s*=\s*['\"])[^'\"]*(['\"])/",
+			'${1}' . esc_js( $current_store_id ) . '${2}',
+			$html
+		);
+	}
+
+	return $html;
+} );
 
 add_action( 'wp_ajax_ac_check_for_updates', function() {
 	check_ajax_referer( 'ac-serial-numbers-settings', 'security' );
