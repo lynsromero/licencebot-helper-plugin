@@ -100,7 +100,9 @@ class AC_Serial_Numbers_Helper_Features {
 			}
 
 			if ( $slug === 'contact_form' ) {
-				$contact_page = get_page_by_path( 'contact' );
+				$page_slug = get_option( 'licencebot_contact_page_slug', 'contact' );
+				$page_slug = basename( untrailingslashit( $page_slug ) );
+				$contact_page = get_page_by_path( $page_slug );
 				if ( ! $contact_page || ! is_page( $contact_page->ID ) ) {
 					continue;
 				}
@@ -213,6 +215,28 @@ class AC_Serial_Numbers_Helper_Features {
 						</fieldset>
 					</td>
 				</tr>
+				<?php if ( $slug === 'contact_form' ) : ?>
+				<tr>
+					<th scope="row">
+						<label for="licencebot_contact_page_slug">
+							<?php _e( 'Contact Page URL', 'ac-serial-numbers' ); ?>
+						</label>
+					</th>
+					<td>
+						<input
+							type="text"
+							id="licencebot_contact_page_slug"
+							name="licencebot_contact_page_slug"
+							value="<?php echo esc_attr( get_option( 'licencebot_contact_page_slug', 'contact' ) ); ?>"
+							placeholder="<?php esc_attr_e( 'contact-us or https://yoursite.com/contact-us/', 'ac-serial-numbers' ); ?>"
+							style="width:100%;max-width:400px;"
+						/>
+						<p class="description" style="margin-top:4px;">
+							<?php _e( 'Enter the full URL (e.g. https://yoursite.com/contact-us/) or just the slug (e.g. contact-us).', 'ac-serial-numbers' ); ?>
+						</p>
+					</td>
+				</tr>
+				<?php endif; ?>
 				<tr>
 					<th scope="row">Status</th>
 					<td>

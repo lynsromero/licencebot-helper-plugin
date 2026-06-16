@@ -6,10 +6,11 @@ define( 'AC_SERIAL_CONTACT_FORM_CODE',       'licencebot_contact_form_html' );
 define( 'AC_SERIAL_CONTACT_FORM_WIDGET_ID',  'licencebot_contact_form_id' );
 define( 'AC_SERIAL_CONTACT_FORM_FETCHED_AT', 'licencebot_contact_form_fetched_at' );
 define( 'AC_SERIAL_CONTACT_FORM_API',        'helper-contact-form' );
+define( 'AC_SERIAL_CONTACT_PAGE_OPTION',     'licencebot_contact_page_slug' );
 
 add_action( 'init', function() {
 	AC_Serial_Numbers_Helper_Features::register( 'contact_form', array(
-		'title'            => __( 'Inline Contact Form', 'ac-serial-numbers' ),
+		'title'            => __( 'Contact Form', 'ac-serial-numbers' ),
 		'description'      => __( 'Display a contact/support form on your store. Configure fields and styling from your LicenceBot Dashboard.', 'ac-serial-numbers' ),
 		'enabled_option'   => AC_SERIAL_CONTACT_FORM_ENABLED,
 		'code_option'      => AC_SERIAL_CONTACT_FORM_CODE,
