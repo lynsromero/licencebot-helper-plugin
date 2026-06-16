@@ -982,7 +982,6 @@ class AC_Serial_Numbers
 
 		if (is_admin()) {
 			require_once dirname(__FILE__) . '/includes/admin/class-ac-serial-numbers-admin.php';
-			require_once dirname(__FILE__) . '/includes/admin/settings/ac-serial-numbers-settings-shortcodes.php';
 		}
 
 		require_once dirname(__FILE__) . '/includes/class-ac-serial-numbers-updater.php';
