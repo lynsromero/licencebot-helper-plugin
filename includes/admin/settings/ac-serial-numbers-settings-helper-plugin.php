@@ -193,7 +193,7 @@ class AC_Serial_Numbers_Settings_Helper_Plugin extends WC_Settings_Page {
 
 		delete_transient( AC_Serial_Numbers_Config_Sync::CONFIG_TRANSIENT );
 
-		$js_loader_slugs = array( 'sales_notification', 'coupon_box', 'sales_popup', 'sales_countdown' );
+		$js_loader_slugs = array( 'sales_notification', 'coupon_box', 'sales_popup', 'sales_countdown', 'sales_counter' );
 
 	$registered = AC_Serial_Numbers_Helper_Features::get_all();
 		foreach ( $registered as $slug => $config ) {

@@ -102,6 +102,7 @@ class AC_Serial_Numbers_Helper_Features {
 			if ( $slug === 'contact_form' || $slug === 'support_tickets'
 				|| $slug === 'sales_notification' || $slug === 'coupon_box'
 				|| $slug === 'sales_popup' || $slug === 'sales_countdown'
+				|| $slug === 'sales_counter'
 			) {
 				continue;
 			}
