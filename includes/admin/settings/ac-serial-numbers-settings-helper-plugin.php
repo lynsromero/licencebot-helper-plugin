@@ -193,12 +193,18 @@ class AC_Serial_Numbers_Settings_Helper_Plugin extends WC_Settings_Page {
 
 		delete_transient( AC_Serial_Numbers_Config_Sync::CONFIG_TRANSIENT );
 
-		$registered = AC_Serial_Numbers_Helper_Features::get_all();
+		$js_loader_slugs = array( 'sales_notification', 'coupon_box', 'sales_popup', 'sales_countdown' );
+
+	$registered = AC_Serial_Numbers_Helper_Features::get_all();
 		foreach ( $registered as $slug => $config ) {
 			$config_key = AC_Serial_Numbers_Config_Sync::slug_to_config_key( $slug );
 			$enabled = ! empty( $patch[ $config_key ] );
 
 			update_option( $config['enabled_option'], $enabled ? 'yes' : 'no' );
+
+			if ( in_array( $slug, $js_loader_slugs, true ) ) {
+				continue;
+			}
 
 			if ( $enabled ) {
 				$result_fetch = AC_Serial_Numbers_Helper_Features::fetch_code( $slug );

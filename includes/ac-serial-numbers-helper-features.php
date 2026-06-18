@@ -99,7 +99,10 @@ class AC_Serial_Numbers_Helper_Features {
 				continue;
 			}
 
-			if ( $slug === 'contact_form' || $slug === 'support_tickets' ) {
+			if ( $slug === 'contact_form' || $slug === 'support_tickets'
+				|| $slug === 'sales_notification' || $slug === 'coupon_box'
+				|| $slug === 'sales_popup' || $slug === 'sales_countdown'
+			) {
 				continue;
 			}
 
