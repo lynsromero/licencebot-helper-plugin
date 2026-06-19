@@ -3,7 +3,7 @@
  * Plugin Name: LicenceBot Helper Plugin
  * Plugin URI:  https://licencebot.com
  * Description: Auto-connects your store with LicenceBot for chat, cart recovery, serial number delivery, and more.
- * Version:     3.7.4
+ * Version:     3.7.5
  * Author:      Tic Limited
  * Author URI:  https://tic.com.bd
  * License:     GPLv2+
@@ -84,7 +84,7 @@ class AC_Serial_Numbers
 	 * @var string
 	 * @since 1.0.0
 	 */
-	public $version = '3.7.4';
+	public $version = '3.7.5';
 
 	/**
 	 * This plugin's instance
@@ -759,6 +759,26 @@ class AC_Serial_Numbers
 		if ( empty( get_option( AC_SERIAL_OPT_STORE_ID ) ) ) { return; }
 		echo '<div data-lb-counter="below_title"></div>';
 	}
+	public function inject_visitor_alerts_above_atc() {
+		if ( get_option( 'licencebot_visitor_alerts_enabled', 'no' ) !== 'yes' ) { return; }
+		if ( empty( get_option( AC_SERIAL_OPT_STORE_ID ) ) ) { return; }
+		echo '<div data-lb-visitor-alerts="above_add_to_cart"></div>';
+	}
+	public function inject_visitor_alerts_below_atc() {
+		if ( get_option( 'licencebot_visitor_alerts_enabled', 'no' ) !== 'yes' ) { return; }
+		if ( empty( get_option( AC_SERIAL_OPT_STORE_ID ) ) ) { return; }
+		echo '<div data-lb-visitor-alerts="below_add_to_cart"></div>';
+	}
+	public function inject_visitor_alerts_above_price() {
+		if ( get_option( 'licencebot_visitor_alerts_enabled', 'no' ) !== 'yes' ) { return; }
+		if ( empty( get_option( AC_SERIAL_OPT_STORE_ID ) ) ) { return; }
+		echo '<div data-lb-visitor-alerts="above_price"></div>';
+	}
+	public function inject_visitor_alerts_below_title() {
+		if ( get_option( 'licencebot_visitor_alerts_enabled', 'no' ) !== 'yes' ) { return; }
+		if ( empty( get_option( AC_SERIAL_OPT_STORE_ID ) ) ) { return; }
+		echo '<div data-lb-visitor-alerts="below_title"></div>';
+	}
 
 	/**
 	 * Enqueue frontend script for "See Your License Key" button.
@@ -991,6 +1011,10 @@ class AC_Serial_Numbers
 		add_action( 'woocommerce_after_add_to_cart_button', array( $this, 'inject_sales_counter_below_atc' ), 5 );
 		add_action( 'woocommerce_single_product_summary', array( $this, 'inject_sales_counter_above_price' ), 9 );
 		add_action( 'woocommerce_single_product_summary', array( $this, 'inject_sales_counter_below_title' ), 6 );
+		add_action( 'woocommerce_before_add_to_cart_button', array( $this, 'inject_visitor_alerts_above_atc' ), 6 );
+		add_action( 'woocommerce_after_add_to_cart_button', array( $this, 'inject_visitor_alerts_below_atc' ), 6 );
+		add_action( 'woocommerce_single_product_summary', array( $this, 'inject_visitor_alerts_above_price' ), 10 );
+		add_action( 'woocommerce_single_product_summary', array( $this, 'inject_visitor_alerts_below_title' ), 7 );
 	}
 
 
