@@ -30,6 +30,19 @@ class AC_Serial_Numbers_Settings_Helper_Plugin extends WC_Settings_Page {
 		$config   = isset( $data['config'] ) ? $data['config'] : array();
 		$features = isset( $data['features'] ) ? $data['features'] : array();
 
+		$supa_keys = array_column( $features, 'key' );
+		foreach ( AC_Serial_Numbers_Helper_Features::get_all() as $slug => $cfg ) {
+			if ( ! in_array( $slug, $supa_keys, true ) ) {
+				$features[] = array(
+					'key'             => $slug,
+					'label'           => $cfg['title'],
+					'description'     => $cfg['description'],
+					'sort'            => 45,
+					'default_enabled' => false,
+				);
+			}
+		}
+
 		$section_map = array(
 			'Support'   => array( 10, 39 ),
 			'Commerce'  => array( 40, 49 ),
@@ -167,6 +180,14 @@ class AC_Serial_Numbers_Settings_Helper_Plugin extends WC_Settings_Page {
 			$key = $f['key'];
 			$config_key = AC_Serial_Numbers_Config_Sync::slug_to_config_key( $key );
 			$patch[ $config_key ] = ! empty( $_POST['features'][ $key ] );
+		}
+
+		$supa_keys = array_column( $features, 'key' );
+		foreach ( AC_Serial_Numbers_Helper_Features::get_all() as $slug => $cfg ) {
+			if ( ! in_array( $slug, $supa_keys, true ) ) {
+				$config_key = AC_Serial_Numbers_Config_Sync::slug_to_config_key( $slug );
+				$patch[ $config_key ] = ! empty( $_POST['features'][ $slug ] );
+			}
 		}
 
 		if ( isset( $_POST['contact_creates_tickets'] ) ) {
