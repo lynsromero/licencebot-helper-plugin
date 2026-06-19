@@ -86,10 +86,17 @@ function licencebot_shortcodes_assets() {
       window.LBHelper.api  = "<?php echo $api; ?>";
       window.LBHelper.tok  = "<?php echo $tok; ?>";
       window.LBHelper.site = location.hostname;
-      window.LBHelper.fetchWidget = window.LBHelper.fetchWidget || function (type) {
-        var u = window.LBHelper.api + "/functions/v1/helper-public-widget?type=" + encodeURIComponent(type) +
-                "&site=" + encodeURIComponent(window.LBHelper.site) +
-                "&token=" + encodeURIComponent(window.LBHelper.tok);
+      window.LBHelper.fetchWidget = window.LBHelper.fetchWidget || function (type, params) {
+        var u = window.LBHelper.api + "/functions/v1/helper-public-widget?type=" + encodeURIComponent(type);
+        if (typeof params === "object" && params !== null) {
+          for (var k in params) {
+            if (params.hasOwnProperty(k)) {
+              u += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
+            }
+          }
+        }
+        u += "&site=" + encodeURIComponent(window.LBHelper.site) +
+             "&token=" + encodeURIComponent(window.LBHelper.tok);
         return fetch(u, { method: "GET" }).then(function (r) { return r.ok ? r.json() : { ok:false }; }).catch(function(){ return { ok:false }; });
       };
     </script>
@@ -163,7 +170,7 @@ add_shortcode( 'licencebot_sales_counter', function ( $atts ) {
       document.querySelectorAll(".lb-sc-sales-counter:not([data-lb-init])").forEach(function (host) {
         host.setAttribute("data-lb-init", "1");
         var w = host.getAttribute("data-window") || "day";
-        window.LBHelper.fetchWidget("sales_counter&window=" + encodeURIComponent(w)).then(function (r) {
+        window.LBHelper.fetchWidget("sales_counter", { window: w }).then(function (r) {
           var n = (r && typeof r.count === "number") ? r.count : 0;
           var el = host.querySelector(".lb-sc-counter"); if (el) el.textContent = n.toLocaleString();
         });
@@ -190,11 +197,10 @@ add_shortcode( 'licencebot_visitor_alerts', function ( $atts ) {
     </span>
     <script>
     (function () {
-      var u = encodeURIComponent(location.pathname);
       document.querySelectorAll(".lb-sc-visitor-alerts:not([data-lb-init])").forEach(function (host) {
         host.setAttribute("data-lb-init", "1");
         function pull() {
-          window.LBHelper.fetchWidget("visitor_alerts&path=" + u).then(function (r) {
+          window.LBHelper.fetchWidget("visitor_alerts", { path: location.pathname }).then(function (r) {
             var n = (r && typeof r.count === "number") ? r.count : Math.floor(2 + Math.random() * 8);
             var el = host.querySelector(".lb-sc-counter"); if (el) el.textContent = n;
           });
