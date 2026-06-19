@@ -3,7 +3,7 @@
  * Plugin Name: LicenceBot Helper Plugin
  * Plugin URI:  https://licencebot.com
  * Description: Auto-connects your store with LicenceBot for chat, cart recovery, serial number delivery, and more.
- * Version:     3.7.1
+ * Version:     3.7.2
  * Author:      Tic Limited
  * Author URI:  https://tic.com.bd
  * License:     GPLv2+
@@ -84,7 +84,7 @@ class AC_Serial_Numbers
 	 * @var string
 	 * @since 1.0.0
 	 */
-	public $version = '3.7.1';
+	public $version = '3.7.2';
 
 	/**
 	 * This plugin's instance
@@ -731,6 +731,36 @@ class AC_Serial_Numbers
 	}
 
 	/**
+	 * Inject Sales Counter anchors at WooCommerce hook locations.
+	 * The JS loader (licencebot-helper) finds these and renders the counter.
+	 */
+	public function inject_sales_counter_anchors() {
+		if ( get_option( 'licencebot_sales_counter_enabled', 'no' ) !== 'yes' ) {
+			return;
+		}
+		$store_id = get_option( AC_SERIAL_OPT_STORE_ID );
+		if ( empty( $store_id ) ) {
+			return;
+		}
+		echo '<div data-lb-counter="above_add_to_cart"></div>';
+	}
+	public function inject_sales_counter_below_atc() {
+		if ( get_option( 'licencebot_sales_counter_enabled', 'no' ) !== 'yes' ) { return; }
+		if ( empty( get_option( AC_SERIAL_OPT_STORE_ID ) ) ) { return; }
+		echo '<div data-lb-counter="below_add_to_cart"></div>';
+	}
+	public function inject_sales_counter_above_price() {
+		if ( get_option( 'licencebot_sales_counter_enabled', 'no' ) !== 'yes' ) { return; }
+		if ( empty( get_option( AC_SERIAL_OPT_STORE_ID ) ) ) { return; }
+		echo '<div data-lb-counter="above_price"></div>';
+	}
+	public function inject_sales_counter_below_title() {
+		if ( get_option( 'licencebot_sales_counter_enabled', 'no' ) !== 'yes' ) { return; }
+		if ( empty( get_option( AC_SERIAL_OPT_STORE_ID ) ) ) { return; }
+		echo '<div data-lb-counter="below_title"></div>';
+	}
+
+	/**
 	 * Enqueue frontend script for "See Your License Key" button.
 	 * Only loads on order-received and view-order pages.
 	 *
@@ -956,6 +986,11 @@ class AC_Serial_Numbers
 	{
 		$this->includes();
 		$this->init_hooks();
+
+		add_action( 'woocommerce_before_add_to_cart_button', array( $this, 'inject_sales_counter_anchors' ), 5 );
+		add_action( 'woocommerce_after_add_to_cart_button', array( $this, 'inject_sales_counter_below_atc' ), 5 );
+		add_action( 'woocommerce_single_product_summary', array( $this, 'inject_sales_counter_above_price' ), 9 );
+		add_action( 'woocommerce_single_product_summary', array( $this, 'inject_sales_counter_below_title' ), 6 );
 	}
 
 
