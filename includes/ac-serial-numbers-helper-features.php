@@ -8,6 +8,7 @@ if ( ! class_exists( 'AC_Serial_Numbers_Helper_Features' ) ) :
 class AC_Serial_Numbers_Helper_Features {
 
 	private static $features = array();
+	private static $auto_registered = array();
 
 	public static function register( $slug, $config ) {
 		self::$features[ $slug ] = wp_parse_args( $config, array(
@@ -19,6 +20,26 @@ class AC_Serial_Numbers_Helper_Features {
 			'fetched_at_option'=> '',
 			'api_endpoint'     => '',
 		));
+	}
+
+	public static function auto_register( $slug, $label = '', $description = '' ) {
+		if ( isset( self::$features[ $slug ] ) ) {
+			return;
+		}
+		self::$features[ $slug ] = array(
+			'title'            => $label,
+			'description'      => $description,
+			'enabled_option'   => 'licencebot_' . $slug . '_enabled',
+			'code_option'      => '',
+			'widget_id_option' => '',
+			'fetched_at_option'=> '',
+			'api_endpoint'     => '',
+		);
+		self::$auto_registered[ $slug ] = true;
+	}
+
+	public static function is_auto_registered( $slug ) {
+		return isset( self::$auto_registered[ $slug ] );
 	}
 
 	public static function get_all() {
@@ -102,7 +123,7 @@ class AC_Serial_Numbers_Helper_Features {
 			if ( $slug === 'contact_form' || $slug === 'support_tickets'
 				|| $slug === 'sales_notification' || $slug === 'coupon_box'
 				|| $slug === 'sales_popup' || $slug === 'sales_countdown'
-				|| $slug === 'sales_counter'
+				|| $slug === 'sales_counter' || self::is_auto_registered( $slug )
 			) {
 				continue;
 			}

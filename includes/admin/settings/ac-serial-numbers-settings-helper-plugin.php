@@ -223,7 +223,7 @@ class AC_Serial_Numbers_Settings_Helper_Plugin extends WC_Settings_Page {
 
 			update_option( $config['enabled_option'], $enabled ? 'yes' : 'no' );
 
-			if ( in_array( $slug, $js_loader_slugs, true ) ) {
+			if ( in_array( $slug, $js_loader_slugs, true ) || AC_Serial_Numbers_Helper_Features::is_auto_registered( $slug ) ) {
 				continue;
 			}
 

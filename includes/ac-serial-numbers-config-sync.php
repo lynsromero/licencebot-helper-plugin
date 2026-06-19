@@ -82,6 +82,19 @@ class AC_Serial_Numbers_Config_Sync {
 
 	private static function update_local_options( $data ) {
 		$config = isset( $data['config'] ) ? $data['config'] : array();
+		$supa_features = isset( $data['features'] ) ? $data['features'] : array();
+
+		foreach ( $supa_features as $f ) {
+			$slug = isset( $f['key'] ) ? $f['key'] : '';
+			if ( ! $slug ) {
+				continue;
+			}
+			if ( ! AC_Serial_Numbers_Helper_Features::get( $slug ) ) {
+				$label = isset( $f['label'] ) ? $f['label'] : $slug;
+				$desc  = isset( $f['description'] ) ? $f['description'] : '';
+				AC_Serial_Numbers_Helper_Features::auto_register( $slug, $label, $desc );
+			}
+		}
 
 		$features = AC_Serial_Numbers_Helper_Features::get_all();
 		foreach ( $features as $slug => $feature ) {
