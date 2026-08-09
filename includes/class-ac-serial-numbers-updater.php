@@ -34,7 +34,7 @@ class AC_Serial_Numbers_Updater {
 				'https://yiczembsfiqqviqxxdxl.supabase.co/functions/v1/plugin-update-download'
 			);
 
-			$transient->response['ac-serial-numbers/ac-serial-numbers.php'] = (object) array(
+			$transient->response['licencebot-helper/licencebot-helper.php'] = (object) array(
 				'new_version'  => $remote->version,
 				'url'          => 'https://licencebot.com',
 				'package'      => $download_url,
@@ -94,7 +94,7 @@ class AC_Serial_Numbers_Updater {
 	}
 
 	public static function add_check_link( $meta, $file ) {
-		if ( $file !== 'ac-serial-numbers/ac-serial-numbers.php' ) {
+		if ( $file !== 'licencebot-helper/licencebot-helper.php' ) {
 			return $meta;
 		}
 

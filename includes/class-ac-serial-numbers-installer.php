@@ -41,7 +41,7 @@ class AC_Serial_Numbers_Installer {
 
 		// Show row meta on the plugin screen.
 		// add_filter( 'plugin_row_meta', array( __CLASS__, 'plugin_row_meta' ), 10, 2 );
-		add_filter( 'plugin_action_links_ac-serial-numbers/ac-serial-numbers.php', array( __CLASS__, 'action_links' ) );
+		add_filter( 'plugin_action_links_licencebot-helper/licencebot-helper.php', array( __CLASS__, 'action_links' ) );
 
 		//cron actions
 		add_filter( 'cron_schedules', array( __CLASS__, 'custom_cron_schedules' ), 20 );

@@ -47,7 +47,7 @@ class AC_Serial_Numbers_Settings_Updates extends WC_Settings_Page {
 						<?php _e( 'Update available', 'ac-serial-numbers' ); ?>
 					</span>
 					<div class="ac-update-buttons">
-						<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'update.php?action=upgrade-plugin&plugin=ac-serial-numbers/ac-serial-numbers.php' ), 'upgrade-plugin_ac-serial-numbers/ac-serial-numbers.php' ) ); ?>" class="button button-primary">
+						<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'update.php?action=upgrade-plugin&plugin=licencebot-helper/licencebot-helper.php' ), 'upgrade-plugin_licencebot-helper/licencebot-helper.php' ) ); ?>" class="button button-primary">
 							<?php _e( 'Update Now', 'ac-serial-numbers' ); ?>
 						</a>
 						<button type="button" class="button" id="ac-check-updates">
