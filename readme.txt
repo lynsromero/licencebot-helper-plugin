@@ -12,6 +12,8 @@ WC tested up to: 10.7.0
 
 Auto-connects your WooCommerce store with LicenceBot for live chat, cart recovery, sales counters, visitor alerts, license key tools, and secure serial number / license key delivery.
 
+Created by **Lyns Romero** — [github.com/lynsromero](https://github.com/lynsromero)
+
 == Description ==
 
 **LicenceBot Helper Plugin** bridges your WooCommerce store with the [LicenceBot](https://licencebot.com) dashboard. After a one-click connection it unlocks a full suite of growth and licensing tools — while keeping every request inside the WordPress HTTP API with transient caching and graceful fallbacks.
